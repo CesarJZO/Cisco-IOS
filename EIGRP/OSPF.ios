@@ -1,0 +1,15 @@
+! This is a sample configuration file for basic OSPF
+! THe OSPF process is configured on the router, it can be different for each router, but the area number must be the same
+router ospf 24
+router-id 5.5.5.5
+network 210.100.50.0 0.0.0.3 area 5
+network 10.20.30.0 0.0.0.63 area 5
+
+! Sucursal1
+router ospf 64
+router-id 1.1.1.1
+network 210.100.50.0 0.0.0.3 area 5
+network 10.20.31.0 0.0.0.31 area 5
+
+! On "border" routers, we need to configure the default route to the next hop
+default-information originate

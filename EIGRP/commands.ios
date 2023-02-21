@@ -1,0 +1,102 @@
+!* EIGRP commands
+! To enter EIGRP mode, needs to be the same on all routers in the network
+router eigrp <1-65535>
+! interface will not be advertised to other routers in the EIGRP domain. It's optional, but it's a good idea to use it to prevent unwanted traffic from being advertised.
+passive-interface <interface>
+! sets an identifier for the router
+eigrp router-id <ip address>
+! Registers the network with EIGRP
+network <ip address> <wildcard>
+! Disable auto-summary
+no auto-summary
+
+!* Other commands
+interface loopback <1-255>
+
+
+! Enters router protocol config mode
+! Same number (Autonomous System) on all routers in the network
+router eigrp <1-65535>
+
+! any ip address, one per router
+eigrp router-id 1.1.1.1
+
+! In EIGRP, the network command is used to specify the networks that are to be advertised to other routers in the EIGRP domain.
+! Router 1
+network 192.168.10.0 0.0.0.31
+network 200.100.50.16 0.0.0.3
+! Router 2
+network 200.100.50.16 0.0.0.3
+network 172.20.35.0 0.0.0.63
+
+show ip eigrp topology
+show ip protocols
+show ip route
+
+! Add virtual interface (loopback)
+interface loopback 1
+
+! Add IP address to loopback
+ip address 2.2.2.2 255.255.255.255
+
+! Disable auto-summary
+no auto-summary
+
+! Add IP addres to physical interface: remember
+! todo: add ip addresses to devices
+interface f4/0
+ip address 192.168.10.97 255.255.255.224
+no shutdown
+
+
+!* add second network
+! R1#
+router eigrp 12
+network 192.168.10.96 0.0.0.3
+
+! For security, add passive interfaces where you don't want to advertise
+! In router 1 and eigrp config mode
+passive-interface g3/0
+passive-interface f4/0
+! If an interface is set to passive, it will not be advertised to other routers in the EIGRP domain.
+
+
+!* Router 3
+router eigrp 12
+eigrp router-id 3.3.3.3
+network 200.100.50.8 0.0.0.3
+network 200.100.50.4 0.0.0.3
+network 192.168.10.64 0.0.0.31
+no auto-summary
+
+!* Router 2 post R3 config
+router eigrp 12
+network 200.100.50.4 0.0.0.3
+
+!* Router 1 post R3 config
+router eigrp 12
+network 200.100.50.8 0.0.0.3
+
+!* Router 2 changing interface
+interface s0/0
+ip address 200.100.50.18 255.255.255.252
+no shutdown
+
+! Add passive interface where connected to LAN
+passive-interface 
+
+
+show ip eigrp topology
+
+!* Guardar conf
+write memory
+copy running-config startup-config
+
+ip route 0.0.0.0 0.0.0.0 <interface>
+
+! Add static route
+redistribute static
+
+
+! Check bandwidth
+show interface <interface>

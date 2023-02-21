@@ -1,0 +1,22 @@
+! Global configuration
+access-list <1-99> permit ip <source> <destination>
+access-list <100-199> deny ip <source> <destination>
+
+! Interface configuration
+access-group <1-99> in interface <interface>
+access-group <100-199> out interface <interface>
+
+! Route-map configuration
+route-map <name> permit <1-99>
+route-map <name> deny <100-199>
+
+! Prefix-list configuration
+prefix-list <name> <permit|deny> <prefix>
+
+! Standard access-list configuration
+access-list <1-99> permit <source>
+access-list <100-199> deny <source>
+
+! Standard route-map configuration
+route-map <name> permit <1-99>
+route-map <name> deny <100-199>
