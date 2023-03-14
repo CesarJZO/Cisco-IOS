@@ -12,7 +12,7 @@ no shutdown
 ! DHCP server
 ip dhcp excluded-address 172.25.70.1 172.25.70.5
 ip dhcp pool CLIENTE
-network 172.25.70.0 255.255.255.224
+network 172.25.70.0 0.0.0.31
 default-router 172.25.70.1
 dns-server 8.8.8.8
 
@@ -21,9 +21,9 @@ dns-server 8.8.8.8
 ! EIGRP 15
 router eigrp 15
 eigrp router-id 20.20.20.20
-network 172.25.70.0 255.255.255.224
-network 200.100.50.0 255.255.255.252
-network 200.100.50.4 255.255.255.252
+network 172.25.70.0 0.0.0.31
+network 200.100.50.0 0.0.0.3
+network 200.100.50.4 0.0.0.3
 
 ! Make passive interfaces
 passive-interface g0/0
@@ -55,10 +55,10 @@ dns-server 8.8.8.8
 
 router eigrp 15
 eigrp router-id 40.40.40.40
-network 172.25.71.0 255.255.255.192
-network 200.100.50.4 255.255.255.252
-network 200.100.50.8 255.255.255.252
-network 200.100.50.12 255.255.255.252
+network 172.25.71.0 0.0.0.63
+network 200.100.50.4 0.0.0.3
+network 200.100.50.8 0.0.0.3
+network 200.100.50.12 0.0.0.3
 passive-interface g0/1
 no auto-summary
 
@@ -85,9 +85,9 @@ dns-server 8.8.8.8
 
 router eigrp 15
 eigrp router-id 30.30.30.30
-network 172.25.72.0 255.255.255.240
-network 200.100.50.12 255.255.255.252
-network 200.100.50.16 255.255.255.252
+network 172.25.72.0 0.0.0.15
+network 200.100.50.12 0.0.0.3
+network 200.100.50.16 0.0.0.3
 passive-interface g0/0
 no auto-summary
 
@@ -109,10 +109,10 @@ no shutdown
 
 router eigrp 15
 eigrp router-id 10.10.10.10
-network 172.25.73.0 
-network 200.100.50.0 255.255.255.252
-network 200.100.50.8 255.255.255.252
-network 200.100.50.16 255.255.255.252
+network 172.25.73.0 0.0.0.15
+network 200.100.50.0 0.0.0.3
+network 200.100.50.8 0.0.0.3
+network 200.100.50.16 0.0.0.3
 passive-interface s0/1/1
 redistribute static
 no auto-summary
@@ -178,6 +178,8 @@ no shutdown
 ip route 0.0.0.0 0.0.0.0 s0/0/0
 
 
+! Show neighbors
+show ip eigrp neighbors
 
 ! Ethernet = 10M
 ! Fast Ethernet = 100M

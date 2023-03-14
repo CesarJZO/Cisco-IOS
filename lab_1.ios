@@ -1,0 +1,20 @@
+write erase
+reload
+
+interface f0/0
+ip address 192.168.2.1 255.255.255.224
+no shutdown
+! Router 3
+interface s0/0/0
+ip address 10.2.2.2 255.255.255.252
+no shutdown
+! Router 1
+interface s0/0/1
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+
+router eigrp 35
+router-id 2.2.2.2
+network 192.168.2.1 0.0.0.31
+network 10.1.1.0 0.0.0.3
+network 10.2.2.0 0.0.0.3

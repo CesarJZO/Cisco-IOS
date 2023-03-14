@@ -1,0 +1,46 @@
+! Create access list
+
+! Router Sucursal 1
+! Permit range of IP addresses
+access-list 12 permit 192.168.50.16 0.0.0.7
+
+! Apply access list to interface
+interface f0/1
+ip access-group 12 out
+
+access-list 11 deny host 172.30.11.45
+access-list 11 permit 172.30.11.0 0.0.0.63
+! This will be removes
+access-list 11 permit any
+
+! Apply access list to interface
+interface g0/0
+ip access-group 11 out
+
+! Remove access list line
+ip access-list standard 11
+no 20
+
+! Display access list
+show ip access-lists
+
+
+!* 4th filter
+access-list 13 permit 172.30.11.0 0.0.0.31
+access-list 13 deny any
+
+! Add password to privileged mode
+enable secret privi
+line vty 0 4
+password cisco
+login
+
+! Register acces list to line vty
+access-class 13 in
+
+access-group NOPC6a3 in
+
+!* Extended access list
+access-list 14 permit tcp any any eq 80
+access-list <100-199|2000-2699> 
+

@@ -1,0 +1,61 @@
+!Router 3
+
+en
+conf t
+
+router eigrp 35
+eigrp router-id 3.3.3.3
+network 10.3.3.0 0.0.0.3
+network 10.2.2.0 0.0.0.3
+
+interface s0/0/1
+ip add 10.2.2.1 255.255.255.252
+no shutdown
+interface f0/1
+ip add 10.3.3.2 255.255.255.252
+no shutdown
+int f0/0
+ip add 192.168.3.1 255.255.255.192
+no shutdown
+
+! Router 2
+
+en
+conf t
+
+router eigrp 35
+eigrp router-id 2.2.2.2
+network 10.1.1.0 0.0.0.3
+network 10.2.2.0 0.0.0.3
+
+interface s0/0/1
+no ip address
+ip add 10.2.2.2 255.255.255.252
+no shutdown
+interface s0/0/0
+no ip address
+ip add 10.1.1.2 255.255.255.252
+no shutdown
+int f0/0
+ip add 192.168.2.1 255.255.255.224
+no shutdown
+
+! Router 1
+
+en
+conf t
+
+router eigrp 35
+eigrp router-id 1.1.1.1
+network 10.1.1.1 0.0.0.3
+network 10.3.3.1 0.0.0.3
+
+interface f0/1
+ip add 10.3.3.1 255.255.255.252
+no shutdown
+interface s0/0/0
+ip add 10.1.1.1 255.255.255.252
+no shutdown
+int f0/0
+ip add 192.168.2.1 255.255.255.224
+no shutdown

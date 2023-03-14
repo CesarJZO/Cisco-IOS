@@ -1,0 +1,22 @@
+!* Extended access list
+ip access-list extended <name|number>
+access-list <100-199> permit <protocol> <source> <source-wildcard> <destination> <destination-wildcard>
+access-list <100-199> permit <protocol> [host] <source> [host] <destination>
+
+! Sucursal1
+ip access-list extended NOMATRIZ
+! Deny all traffic from Sucursal1 to Matriz that corresponds to TCP port 80 (HTTP) from 172.30.10.96 (PC4) to 192.168.50.30 (Servidor páginas 1)
+deny tcp host 172.30.10.96 host 192.168.50.30 eq 80
+permit ip any any
+interface g0/0
+ip access-group NOMATRIZ in
+
+access-list 110 permit tcp host 172.30.11.15 host 192.168.50.30 eq 80
+access-list 110 permit tcp host 172.30.11.25 host 192.168.50.30 eq 80
+access-list 110 deny tcp 172.30.11.0 0.0.0.063 host 192.168.50.30 eq 80
+access-list 110 permit ip any any
+
+interface g0/0
+ip access-group 110 in
+
+!! Dato perturbador: FTP es un protocolo de transferencia de archivos
