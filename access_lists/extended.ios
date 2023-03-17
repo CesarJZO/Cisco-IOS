@@ -1,9 +1,9 @@
-!* Extended access list
+!** Extended access list
 ip access-list extended <name|number>
 access-list <100-199> permit <protocol> <source> <source-wildcard> <destination> <destination-wildcard>
 access-list <100-199> permit <protocol> [host] <source> [host] <destination>
 
-! Sucursal1
+!* Sucursal1
 ip access-list extended NOMATRIZ
 ! Deny all traffic from Sucursal1 to Matriz that corresponds to TCP port 80 (HTTP) from 172.30.10.96 (PC4) to 192.168.50.30 (Servidor páginas 1)
 deny tcp host 172.30.10.96 host 192.168.50.30 eq 80
@@ -18,5 +18,24 @@ access-list 110 permit ip any any
 
 interface g0/0
 ip access-group 110 in
+
+!* Matriz
+ip access-list extended FILTRO1
+! Summarization of the ACL (192.162.60.52 & 192.168.60.53) 1921.168.60.52 0.0.0.1
+permit tcp 192.168.60.52 0.0.0.1 host 172.30.11.62 eq ftp
+deny tcp 192.168.60.0 0.0.0.63 host 172.30.11.62 eq 21
+permit ip any any
+interface g0/1
+ip access-group FILTRO1 in
+
+ip access-list extended IN
+deny icmp any any echo
+permit ip any any
+
+interface s0/0/1
+ip access-group IN in
+!* Add echo reply
+ip access-list extended IN
+15 deny icmp any any echo-reply
 
 !! Dato perturbador: FTP es un protocolo de transferencia de archivos
