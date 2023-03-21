@@ -38,4 +38,10 @@ ip access-group IN in
 ip access-list extended IN
 15 deny icmp any any echo-reply
 
-!! Dato perturbador: FTP es un protocolo de transferencia de archivos
+! Deny email traffic from
+ip access-list extended DENYEMAIL
+deny tcp host 172.30.10.74 host 192.168.50.30 eq smtp
+
+! SMPT para enviar correos
+! POP3 para recibir correos
+! FTP es un protocolo de transferencia de archivos
