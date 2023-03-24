@@ -1,0 +1,10 @@
+! NAT: Network Address Translation
+ip nat inside source static <inside_ip> <outside_ip>
+interface <interface>
+ip nat <inside|outside>
+
+show ip nat translations
+
+! Example
+ip nat inside source static 192.168.10.6 200.100.50.2
+ip nat inside source static 10.20.30.25 8.8.8.8
