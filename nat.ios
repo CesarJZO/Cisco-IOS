@@ -1,7 +1,7 @@
 ! NAT: Network Address Translation
 ip nat inside source static <inside_ip> <outside_ip>
 interface <interface>
-ip nat <inside|outside>
+ip nat [inside|outside]
 
 show ip nat translations
 
