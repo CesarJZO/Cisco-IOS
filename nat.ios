@@ -8,3 +8,19 @@ show ip nat translations
 ! Example
 ip nat inside source static 192.168.10.6 200.100.50.2
 ip nat inside source static 10.20.30.25 8.8.8.8
+
+! Dynamic NAT
+ip nat pool <pool_name> <start_ip> <end_ip> { netmask <netmask> | prefix-length <prefix_length> }
+
+! Using access-lists
+access-list <1-99> permit <ip_address> <wildcard>
+
+ip nat inside source list <1-99> pool <pool_name>
+
+! Intern interface
+interface <interface>
+ip nat inside
+
+! Extern interface
+interface <interface>
+ip nat outside
