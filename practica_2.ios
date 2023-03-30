@@ -114,58 +114,95 @@ ip access-group PROV in
 !* Tuesday filter
 
 !? 3. One devce for each RED (1, 2, 3) can access proveedor1.com, everyone else can't
-ip access-list extended ONE_PER_RED
-!@ RED1
+!@ CENTRAL -> RED1
+ip access-list extended RED1_3
 permit tcp host 192.168.50.3 host 10.65.30.25 eq www
-interface g0/0
-ip access-group ONE_PER_RED in
-!@ RED2
-permit tcp host 192.168.60.3 host 10.65.30.25 eq www
-interface g0/1
-ip access-group ONE_PER_RED in
-!@ RED3
-permit tcp host 192.168.70.3 host 10.65.30.25 eq www
-interface g0/0
-ip access-group ONE_PER_RED in
-!@ Everyone else
 deny tcp any host 10.65.30.25 eq www
 permit ip any any
+interface g0/0
+ip access-group RED1_3 in
+!@ CENTRAL -> RED2
+ip access-list extended RED2_3
+permit tcp host 192.168.60.3 host 10.65.30.25 eq www
+deny tcp any host 10.65.30.25 eq www
+permit ip any any
+interface g0/1
+ip access-group RED2_3 in
+!@ REMOTO -> RED3
+ip access-list extended RED3_3
+permit tcp host 192.168.70.3 host 10.65.30.25 eq www
+deny tcp any host 10.65.30.25 eq www
+permit ip any any
+interface g0/0
+ip access-group RED3_3 in
 
+! todo: Fix this. Add ADMIN list as in on interfaces from laptop and make another list that denies access to the rest of the network
 !? 4. Laptop 2 is the only one that can access routers in intranet using telnet
 ip access-list extended ADMIN
-access-list ADMIN permit tcp host 192.168.60.2 host 192.168.60.1 eq telnet
-access-list ADMIN permit tcp host 192.168.60.2 host 200.100.50.4 eq telnet
-access-list ADMIN deny tcp any host 192.168.60.1 eq telnet
+permit tcp host 192.168.60.2 host 192.168.60.1 eq telnet
+permit tcp host 192.168.60.2 host 200.100.50.4 eq telnet
+deny tcp any host 192.168.60.1 eq telnet
+permit ip any any
+!@ CENTRAL
+interface g0/0
+ip access-group ADMIN in
+interface g0/1
+ip access-group ADMIN in
+interface g0/1/0
+ip access-group ADMIN in
+interface s0/0/0
+ip access-group ADMIN in
+interface s0/0/1
+ip access-group ADMIN in
+!@ REMOTO
+interface g0/0
+ip access-group ADMIN in
+interface g0/1
+ip access-group ADMIN in
+interface s0/0/1
+ip access-group ADMIN in
 
 !* Wednesday filter
 
 !? 5. One device for each RED (1, 2, 3, 4) can have FTP access to Server 1 and 2, everyone else can't
-ip access-list extended FTP
+ip access-list extended FTP_INTERN
 !@ RED1
-access-list FTP permit tcp host 192.168.50.4 host 192.168.100.2 eq ftp
-access-list FTP permit tcp host 192.168.50.4 host 192.168.100.3 eq ftp
+permit tcp host 192.168.50.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.50.4 host 192.168.100.3 eq ftp
 !@ RED2
-access-list FTP permit tcp host 192.168.60.4 host 192.168.100.2 eq ftp
-access-list FTP permit tcp host 192.168.60.4 host 192.168.100.3 eq ftp
+permit tcp host 192.168.60.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.60.4 host 192.168.100.3 eq ftp
 !@ RED3
-access-list FTP permit tcp host 192.168.70.4 host 192.168.100.2 eq ftp
-access-list FTP permit tcp host 192.168.70.4 host 192.168.100.3 eq ftp
+permit tcp host 192.168.70.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.70.4 host 192.168.100.3 eq ftp
 !@ RED4
-access-list FTP permit tcp host 192.168.80.4 host 192.168.100.2 eq ftp
-access-list FTP permit tcp host 192.168.80.4 host 192.168.100.3 eq ftp
-!@ Everyone else
-access-list FTP deny tcp any host 192.168.100.2 eq ftp
-access-list FTP deny tcp any host 192.168.100.3 eq ftp
+permit tcp host 192.168.80.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.80.4 host 192.168.100.3 eq ftp
+deny tcp any host 192.168.100.2 eq ftp
+deny tcp any host 192.168.100.3 eq ftp
+permit ip any any
+
+!@ CENTRAL
+interface g0/1/0
+ip access-group FTP_INTERN out
+
+ip access-list extended FTP_EXTERN
+deny tcp any host 192.168.100.2 eq ftp
+deny tcp any host 192.168.100.3 eq ftp
+permit ip any any
+interface s0/0/1
+ip access-group FTP_EXTERN in
 
 !? 6. Deny ping from external networks
 ip access-list extended DENY_PING
-access-list DENY_PING deny icmp any any echo
-access-list DENY_PING permit ip any any
+deny icmp any any echo
+permit ip any any
 interface s0/0/1
 ip access-group DENY_PING in
 
 !? 7. Only one device from RED3 cannot access tecnm.mx, everyone else can
 ip access-list extended DENY_TECNM
-access-list DENY_TECNM deny tcp host 192.168.70.5 host 192.168.100.3 eq www
-access-list DENY_TECNM permit ip any any
+deny tcp host 192.168.70.5 host 192.168.100.3 eq www
+permit ip any any
 interface g0/0
+ip access-group DENY_TECNM in
