@@ -136,31 +136,46 @@ permit ip any any
 interface g0/0
 ip access-group RED3_3 in
 
-! todo: Fix this. Add ADMIN list as in on interfaces from laptop and make another list that denies access to the rest of the network
 !? 4. Laptop 2 is the only one that can access routers in intranet using telnet
+!@ CENTRAL
 ip access-list extended ADMIN
 permit tcp host 192.168.60.2 host 192.168.60.1 eq telnet
-permit tcp host 192.168.60.2 host 200.100.50.4 eq telnet
 deny tcp any host 192.168.60.1 eq telnet
 permit ip any any
-!@ CENTRAL
-interface g0/0
-ip access-group ADMIN in
 interface g0/1
 ip access-group ADMIN in
+
+ip access-list extended DENY_TELNET
+deny tcp any host 192.168.50.1 eq telnet
+deny tcp any host 192.168.100.1 eq telnet
+deny tcp any host 200.100.50.5 eq telnet
+deny tcp any host 189.43.25.2 eq telnet
+permit ip any any
 interface g0/1/0
-ip access-group ADMIN in
+ip access-group DENY_TELNET in
 interface s0/0/0
-ip access-group ADMIN in
+ip access-group DENY_TELNET in
 interface s0/0/1
-ip access-group ADMIN in
-!@ REMOTO
+ip access-group DENY_TELNET in
 interface g0/0
-ip access-group ADMIN in
-interface g0/1
-ip access-group ADMIN in
+ip access-group DENY_TELNET in
+
+!@ REMOTO
+ip access-list extended ADMIN
+permit tcp host 192.168.60.2 host 200.100.50.6 eq telnet
+deny tcp any host 200.100.50.6 eq telnet
+permit ip any any
 interface s0/0/1
 ip access-group ADMIN in
+
+ip access-list extended DENY_TELNET
+deny tcp any host 192.168.70.1 eq telnet
+deny tcp any host 192.168.80.1 eq telnet
+permit ip any any
+interface g0/0
+ip access-group DENY_TELNET in
+interface g0/1
+ip access-group DENY_TELNET in
 
 !* Wednesday filter
 
