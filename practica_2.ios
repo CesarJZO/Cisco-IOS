@@ -1,6 +1,6 @@
 !~~ ---- Routing ---- ~~!
 
-!@Sucursal -> RED 1, 2, clusters
+!@CENTRAL -> RED 1, 2, clusters
 interface g0/1/0
 ip address 192.168.100.1 255.255.255.240
 no shutdown
@@ -29,7 +29,7 @@ passive-interface g0/0
 passive-interface g0/1
 redistribute static
 
-!@Remoto 1 -> RED 3, 4
+!@REMOTO 1 -> RED 3, 4
 interface s0/0/1
 ip address 200.100.50.6 255.255.255.252
 no shutdown
@@ -48,6 +48,15 @@ network 192.168.80.0 0.0.0.63
 network 200.100.50.0 0.0.0.3
 passive-interface g0/0
 passive-interface g0/1
+no auto-summary
+
+! Telnet
+line vty 0 4
+transport input telnet
+enable secret privi
+password cisco
+login
+
 
 !@ISP
 interface s0/0/0
