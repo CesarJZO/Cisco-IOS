@@ -98,16 +98,16 @@ ip route 0.0.0.0 0.0.0.0 s0/0/0
 
 !? 1. RED1 should not acess its.mx, but everyone else should
 ip access-list extended DENY_ITS
-access-list DENY_ITS deny tcp any host 192.168.100.2 eq http
-access-list DENY_ITS permit ip any any
+deny tcp any host 192.168.100.2 eq www
+permit ip any any
 interface g0/0
 ip access-group DENY_ITS in
 
 !? 2. RED4: Allow only 5 hosts to access proveedor1.com, the rest can't, but everyone else can
 ip access-list extended PROV
-access-list PROV permit tcp 192.168.80.0 0.0.0.3 host 10.65.30.25 eq http
-access-list PROV deny tcp 192.168.80.0 0.0.0.31 host 10.65.30.25 eq http
-access-list PROV permit ip any any
+permit tcp 192.168.80.0 0.0.0.7 host 10.65.30.25 eq www
+deny tcp 192.168.80.0 0.0.0.31 host 10.65.30.25 eq www
+permit ip any any
 interface g0/1
 ip access-group PROV in
 
@@ -116,13 +116,20 @@ ip access-group PROV in
 !? 3. One devce for each RED (1, 2, 3) can access proveedor1.com, everyone else can't
 ip access-list extended ONE_PER_RED
 !@ RED1
-access-list ONE_PER_RED permit tcp host 192.168.50.3 host 10.65.30.25 eq http
+permit tcp host 192.168.50.3 host 10.65.30.25 eq www
+interface g0/0
+ip access-group ONE_PER_RED in
 !@ RED2
-access-list ONE_PER_RED permit tcp host 192.168.60.3 host 10.65.30.25 eq http
+permit tcp host 192.168.60.3 host 10.65.30.25 eq www
+interface g0/1
+ip access-group ONE_PER_RED in
 !@ RED3
-access-list ONE_PER_RED permit tcp host 192.168.70.3 host 10.65.30.25 eq http
+permit tcp host 192.168.70.3 host 10.65.30.25 eq www
+interface g0/0
+ip access-group ONE_PER_RED in
 !@ Everyone else
-access-list ONE_PER_RED deny tcp any host 10.65.30.25 eq http
+deny tcp any host 10.65.30.25 eq www
+permit ip any any
 
 !? 4. Laptop 2 is the only one that can access routers in intranet using telnet
 ip access-list extended ADMIN
@@ -159,6 +166,6 @@ ip access-group DENY_PING in
 
 !? 7. Only one device from RED3 cannot access tecnm.mx, everyone else can
 ip access-list extended DENY_TECNM
-access-list DENY_TECNM deny tcp host 192.168.70.5 host 192.168.100.3 eq http
+access-list DENY_TECNM deny tcp host 192.168.70.5 host 192.168.100.3 eq www
 access-list DENY_TECNM permit ip any any
 interface g0/0
