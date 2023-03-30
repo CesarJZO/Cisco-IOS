@@ -1,0 +1,114 @@
+!~~ ---- EIGRP ---- ~~!
+
+!@Sucursal -> RED 1, 2, clusters
+interface g0/1/0
+ip address 192.168.100.1 255.255.255.240
+no shutdown
+interface s0/0/0
+ip address 200.100.50.5 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 189.43.25.1 255.255.255.252
+no shutdown
+interface g0/1
+ip address 192.168.60.1 255.255.255.192
+no shutdown
+interface g0/0
+ip address 192.168.50.1 255.255.255.224
+no shutdown
+
+! EIGRP
+ip route 0.0.0.0 0.0.0.0 s0/0/1
+router eigrp 24
+eigrp router-id 1.2.3.4
+network 192.168.50.0 0.0.0.31
+network 192.168.60.0 0.0.0.63
+network 192.168.100.0 0.0.0.15
+network 200.100.50.0 0.0.0.3
+redistribute static
+
+!@Remoto 1 -> RED 3, 4
+route eigrp 24
+eigrp r 5.6.7.8
+network 192.168.70.0 0.0.0.63
+network 192.168.80.0 0.0.0.63
+network 200.100.50.0 0.0.0.3
+passive-interface g0/0
+passive-interface g0/1
+ip route 0.0.0.0 0.0.0.0 
+
+!~~ ---- Summarization ---- ~~!
+
+!@ISP
+ip route 192.168.0.0 255.255.0.0
+
+!~~ ---- Access lists ---- ~~!
+
+!* Monay filter
+
+!? 1. RED1 should not acess its.mx, but everyone else should
+ip access-list extended DENY_ITS
+access-list DENY_ITS deny tcp any host 192.168.100.2 eq http
+access-list DENY_ITS permit ip any any
+interface g0/0
+ip access-group DENY_ITS in
+
+!? 2. RED4: Allow only 5 hosts to access proveedor1.com, the rest can't, but everyone else can
+ip access-list extended PROV
+access-list PROV permit tcp 192.168.80.0 0.0.0.3 host 10.65.30.25 eq http
+access-list PROV deny tcp 192.168.80.0 0.0.0.31 host 10.65.30.25 eq http
+access-list PROV permit ip any any
+interface g0/1
+ip access-group PROV in
+
+!* Tuesday filter
+
+!? 3. One devce for each RED (1, 2, 3) can access proveedor1.com, everyone else can't
+ip access-list extended ONE_PER_RED
+!@ RED1
+access-list ONE_PER_RED permit tcp host 192.168.50.3 host 10.65.30.25 eq http
+!@ RED2
+access-list ONE_PER_RED permit tcp host 192.168.60.3 host 10.65.30.25 eq http
+!@ RED3
+access-list ONE_PER_RED permit tcp host 192.168.70.3 host 10.65.30.25 eq http
+!@ Everyone else
+access-list ONE_PER_RED deny tcp any host 10.65.30.25 eq http
+
+!? 4. Laptop 2 is the only one that can access routers in intranet using telnet
+ip access-list extended ADMIN
+access-list ADMIN permit tcp host 192.168.60.2 host 192.168.60.1 eq telnet
+access-list ADMIN permit tcp host 192.168.60.2 host 200.100.50.4 eq telnet
+access-list ADMIN deny tcp any host 192.168.60.1 eq telnet
+
+!* Wednesday filter
+
+!? 5. One device for each RED (1, 2, 3, 4) can have FTP access to Server 1 and 2, everyone else can't
+ip access-list extended FTP
+!@ RED1
+access-list FTP permit tcp host 192.168.50.4 host 192.168.100.2 eq ftp
+access-list FTP permit tcp host 192.168.50.4 host 192.168.100.3 eq ftp
+!@ RED2
+access-list FTP permit tcp host 192.168.60.4 host 192.168.100.2 eq ftp
+access-list FTP permit tcp host 192.168.60.4 host 192.168.100.3 eq ftp
+!@ RED3
+access-list FTP permit tcp host 192.168.70.4 host 192.168.100.2 eq ftp
+access-list FTP permit tcp host 192.168.70.4 host 192.168.100.3 eq ftp
+!@ RED4
+access-list FTP permit tcp host 192.168.80.4 host 192.168.100.2 eq ftp
+access-list FTP permit tcp host 192.168.80.4 host 192.168.100.3 eq ftp
+!@ Everyone else
+access-list FTP deny tcp any host 192.168.100.2 eq ftp
+access-list FTP deny tcp any host 192.168.100.3 eq ftp
+
+!? 6. Deny ping from external networks
+ip access-list extended DENY_PING
+access-list DENY_PING deny icmp any any echo
+access-list DENY_PING permit ip any any
+interface s0/0/1
+ip access-group DENY_PING in
+
+!? 7. Only one device from RED3 cannot access tecnm.mx, everyone else can
+ip access-list extended DENY_TECNM
+access-list DENY_TECNM deny tcp host 192.168.70.5 host 192.168.100.3 eq http
+access-list DENY_TECNM permit ip any any
+interface g0/0
