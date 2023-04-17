@@ -221,3 +221,130 @@ deny tcp host 192.168.70.5 host 192.168.100.3 eq www
 permit ip any any
 interface g0/0
 ip access-group DENY_TECNM in
+
+
+!~~ ---- Fix acess group ---- ~~!
+
+!@ CENTRAL
+ip access-list extended G00
+! 4
+deny tcp any host 192.168.50.1 eq telnet
+! 3
+permit tcp host 192.168.50.3 host 10.65.30.25 eq www
+! 1
+deny tcp any host 192.168.100.2 eq www
+deny tcp any host 10.65.30.25 eq www
+permit ip any any
+interface g0/0
+ip access-group G00 in
+
+ip access-list extended G01
+! 4
+permit tcp host 192.168.60.2 host 192.168.60.1 eq telnet
+deny tcp any host 192.168.60.1 eq telnet
+! 3
+permit tcp host 192.168.60.3 host 10.65.30.25 eq www
+deny tcp any host 10.65.30.25 eq www
+permit ip any any
+interface g0/1
+ip access-group G01 in
+
+ip access-list extended G010
+! 4
+deny tcp any host 192.168.100.1 eq telnet
+permit tcp host 192.168.50.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.50.4 host 192.168.100.3 eq ftp
+permit tcp host 192.168.60.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.60.4 host 192.168.100.3 eq ftp
+permit tcp host 192.168.70.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.70.4 host 192.168.100.3 eq ftp
+permit tcp host 192.168.80.4 host 192.168.100.2 eq ftp
+permit tcp host 192.168.80.4 host 192.168.100.3 eq ftp
+deny tcp any host 192.168.100.2 eq ftp
+deny tcp any host 192.168.100.3 eq ftp
+permit ip any any
+interface g0/1/0
+ip access-group G010 out
+
+ip access-list extended S000
+! Exam 2
+permit tcp host 192.168.80.9 host 200.100.50.5 eq telnet
+! 4
+deny tcp any host 200.100.50.5 eq telnet
+permit ip any any
+interface s0/0/0
+ip access-group S000 in
+
+ip access-list extended S001
+! 6
+deny icmp any any echo
+! Exam 2
+deny tcp any host 192.168.100.3 eq www
+! 4
+deny tcp any host 189.43.25.2 eq telnet
+! 5
+deny tcp any host 192.168.100.2 eq ftp
+deny tcp any host 192.168.100.3 eq ftp
+permit ip any any
+interface s0/0/1
+ip access-group S001 in
+
+!@ REMOTO
+ip access-list extended G00
+! 7
+deny tcp host 192.168.70.5 host 192.168.100.3 eq www
+! 4
+deny tcp any host 192.168.70.1 eq telnet
+! 3
+permit tcp host 192.168.70.3 host 10.65.30.25 eq www
+deny tcp any host 10.65.30.25 eq www
+permit ip any any
+interface g0/0
+ip access-group G00 in
+
+ip access-list extended G01
+! 1
+permit tcp host 192.168.80.9 host 192.168.80.1 eq telnet
+! 4
+deny tcp any host 192.168.80.1 eq telnet
+! 2
+permit tcp 192.168.80.0 0.0.0.7 host 10.65.30.25 eq www
+deny tcp 192.168.80.0 0.0.0.31 host 10.65.30.25 eq www
+permit ip any any
+interface g0/1
+ip access-group G01 in
+
+ip access-list extended S001
+! 4
+permit tcp host 192.168.60.2 host 200.100.50.6 eq telnet
+deny tcp any host 200.100.50.6 eq telnet
+permit ip any any
+interface s0/0/1
+ip access-group S001 in
+
+!~~ ---- Exam ---- ~~!
+
+!? 1. Add a laptop on RED1, and give telnet access to the routers
+!@ CENTRAL
+ip access-list extended S000
+permit tcp host 192.168.80.9 host 200.100.50.5 eq telnet
+deny tcp any host 200.100.50.5 eq telnet
+permit ip any any
+interface s0/0/0
+ip access-group S000 in
+
+!@ REMOTO
+ip access-list extended G01
+permit tcp host 192.168.80.9 host 192.168.80.1 eq telnet
+deny tcp any host 192.168.80.1 eq telnet
+permit ip any any
+interface g0/1
+ip access-group G01 in
+
+!? 2. Deny access to tecnm.mx from external networks
+!@ CENTRAL
+ip acess-list extended S001
+deny tcp any host 192.168.100.3 eq www
+permit ip any any
+interface s0/0/1
+ip access-group S001 in
