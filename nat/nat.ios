@@ -1,4 +1,6 @@
 ! NAT: Network Address Translation
+
+! Static nat
 ip nat inside source static <inside_ip> <outside_ip>
 interface <interface>
 ip nat [inside|outside]
@@ -12,7 +14,7 @@ ip nat inside source static 10.20.30.25 8.8.8.8
 ! Dynamic NAT
 ip nat pool <pool_name> <start_ip> <end_ip> { netmask <netmask> | prefix-length <prefix_length> }
 
-! Using access-lists
+! Use access-lists to apply NAT pool, it is not necessary to apply it to an interface
 access-list <1-99> permit <ip_address> <wildcard>
 
 ip nat inside source list <1-99> pool <pool_name>
@@ -21,6 +23,7 @@ ip nat inside source list <1-99> pool <pool_name>
 interface <interface>
 ip nat inside
 
-! Extern interface
+! Extern interface. Border router, interface connected to ISP is the outside interface and
+! all others are inside interfaces
 interface <interface>
 ip nat outside

@@ -1,0 +1,18 @@
+!~~ NAT Overflow (PAT)
+
+ip nat pool <name> <start_public_ip> <end_public_ip> netmask <netmask>
+! Start and end IPs are inclusive
+! The can be the same IP address
+
+access-list <number> permit <network> <wildcard>
+
+! Using overload will allow the router to use the same port (ip?) for multiple hosts
+ip nat inside source list <number> pool <name> overload
+
+! NAT for the inside interface
+interface <interface>
+ip nat inside
+
+! NAT for the outside interface
+interface <interface>
+ip nat outside
