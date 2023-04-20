@@ -1,0 +1,53 @@
+!~~ ISP ~~!
+! Remove static ip routes
+no ip route 10.20.30.0 255.255.255.192 Serial0/0/1 
+no ip route 192.168.10.0 255.255.255.128 Serial0/0/0 
+no ip route 172.20.35.0 255.255.255.192 Serial0/0/0 
+no ip route 8.8.8.0 255.255.255.224 Serial0/1/0 
+no ip route 10.20.31.0 255.255.255.224 Serial0/0/1 
+
+interface s0/0/0
+ip address 95.40.20.1 255.255.255.248
+interface s0/1/0
+ip address 8.8.8.1 255.255.255.240
+interface s0/0/1
+ip address 210.90.36.1 255.255.255.248
+
+!~~ DNS ~~!
+interface g0/0
+ip address 10.50.80.1 255.255.255.224
+interface s0/0/0
+ip address 8.8.8.2 255.255.255.240
+
+ip nat inside source static 10.50.80.30 8.8.8.8
+
+!~~ CLIENTE 1 ~~!
+interface s0/0/0
+ip address 210.90.36.2 255.255.255.248
+ip nat outside
+
+interface g0/0
+ip nat inside
+
+ip nat inside source static 10.20.30.40 210.90.36.6
+
+interface s0/0/0
+ip nat outside
+interface g0/0
+ip nat inside
+
+ip nat pool CLIENTE1 210.90.36.2 210.90.36.5 netmask 255.255.255.248
+access-list 1 permit 10.20.30.0 0.0.0.63
+access-list 1 permit 10.20.31.0 0.0.0.31
+
+ip nat inside source list 1 pool CLIENTE1
+
+interface s0/0/1
+ip nat inside
+
+!~~ R 3 ~~!
+interface s5/0
+ip address 95.40.20.2 255.255.255.248
+
+!* Consult
+show ip nat translations
