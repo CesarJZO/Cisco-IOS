@@ -1,3 +1,21 @@
+! Set priority
 spanning-tree vlan 1 priority <increments_of_4096>
 
+! Set bridge root
+spanning-tree vlan 1 root primary
+spanning-tree vlan 1 root secondary
+
 show spanning-tree
+
+! Activate portfast on end devices
+interface <interface>
+spanning-tree portfast
+
+! Switch
+spanning-tree vlan 1 priority 4096
+spanning-tree vlan 1 priority 24576
+! It can be reset by setting priority to default (32768)
+
+! Make root switch not primary
+interface range <interfaces>
+shutdown
