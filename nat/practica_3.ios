@@ -1,0 +1,193 @@
+!~~ Planta 1 ~~!
+hostname Planta1
+interface g0/0
+ip address 172.25.60.1 255.255.255.192
+no shutdown
+interface g0/0/0
+ip address 200.100.50.25 255.255.255.252
+no shutdown
+interface g0/1/0
+ip address 200.100.50.33 255.255.255.252
+no shutdown
+
+router eigrp 12
+network 172.25.60.0 0.0.0.63
+network 200.100.50.24 0.0.0.3
+network 200.100.50.32 0.0.0.3
+
+ip dhcp pool PLANTA1
+network 172.25.60.0 255.255.255.192
+default-router 172.25.60.1
+dns-server 8.8.8.8
+
+!~~ Planta 2 ~~!
+hostname Planta2
+interface g0/0
+ip address 172.25.60.65 255.255.255.192
+no shutdown
+interface g0/1/0
+ip address 200.100.50.26 255.255.255.252
+no shutdown
+interface g0/0/0
+ip address 200.100.50.29 255.255.255.252
+no shutdown
+
+router eigrp 12
+network 172.25.60.64 0.0.0.63
+network 200.100.50.28 0.0.0.3
+network 200.100.50.24 0.0.0.3
+
+ip dhcp pool PLANTA2
+network 172.25.60.64 255.255.255.192
+default-router 172.25.64.65
+dns-server 8.8.8.8
+
+!~~ Planta 3 ~~!
+hostname Planta3
+interface g0/0
+ip address 172.25.60.129 255.255.255.192
+no shutdown
+interface g0/0/0
+ip address 200.100.50.34 255.255.255.252
+no shutdown
+interface g0/1/0
+ip address 200.100.50.30 255.255.255.252
+no shutdown
+interface g0/3/0
+ip address 200.100.50.37 255.255.255.252
+no shutdown
+
+router eigrp 12
+network 172.25.60.128 0.0.0.63
+network 200.100.50.28 0.0.0.3
+network 200.100.50.32 0.0.0.3
+network 200.100.50.36 0.0.0.3
+
+ip dhcp pool PLANTA3
+network 172.25.60.128 255.255.255.192
+default-router 172.25.60.129
+dns-server 8.8.8.8
+
+!~~ Corporativo ~~!
+hostname Corporativo
+interface g0/0
+ip address 172.25.60.193 255.255.255.192
+ip nat inside
+no shutdown
+interface g0/0/0
+ip address 200.100.50.38 255.255.255.252
+ip nat inside
+no shutdown
+interface s0/1/0
+ip address 65.20.74.2 255.255.255.248
+ip nat outside
+no shutdown
+
+ip route 0.0.0.0 0.0.0.0 s0/1/0
+router eigrp 12
+network 172.25.60.192 0.0.0.63
+network 200.100.50.36 0.0.0.3
+redistribute static
+
+ip dhcp pool CORPORATIVO
+network 172.25.60.192 255.255.255.192
+default-router 172.25.60.193
+dns-server 8.8.8.8
+
+!* NAT *!
+ip nat inside source static 172.25.60.194 65.20.74.4
+!* PAT *!
+ip nat pool PAT 65.20.74.3 65.20.74.3 netmask 255.255.255.248
+ip nat inside source list 1 pool PAT overload
+access-list 1 permit 172.25.60.0 0.0.0.255
+
+!~~ ISP ~~!
+hostname ISP
+interface s0/0/0
+ip address 65.20.74.1 255.255.255.248
+no shutdown
+interface s0/0/1
+ip address 65.20.74.17 255.255.255.248
+no shutdown
+interface s0/1/0
+ip address 65.20.74.33 255.255.255.240
+no shutdown
+interface s0/1/1
+ip address 8.8.8.1 255.255.255.240
+no shutdown
+
+!~~ DNS ~~!
+hostname DNS
+interface f0/0
+ip address 172.16.10.1 255.255.255.224
+ip nat inside
+no shutdown
+interface s0/0/0
+ip address 8.8.8.2 255.255.255.240
+ip nat outside
+no shutdown
+
+ip dhcp pool DNS
+network 172.16.10.0 255.255.255.224
+default-router 172.25.60.1
+dns-server 8.8.8.8
+
+ip route 0.0.0.0 0.0.0.0 s0/0/0
+
+!* NAT *!
+ip nat inside source static 172.16.10.7 8.8.8.8
+!* PAT *!
+ip nat pool PAT 8.8.8.3 8.8.8.3 netmask 255.255.255.248
+ip nat inside source list 1 pool PAT overload
+access-list 1 permit 172.16.10.0 0.0.0.31
+
+!~~ Empresa 2 ~~!
+hostname Empresa2
+interface f0/0
+ip address 30.15.5.1 255.255.255.192
+ip nat inside
+no shutdown
+interface s0/2/0
+ip address 65.20.74.18 255.255.255.248
+ip nat outside
+no shutdown
+
+ip dhcp pool EMPRESA2
+network 30.15.5.0 255.255.255.192
+default-router 30.15.5.1
+dns-server 8.8.8.8
+
+ip route 0.0.0.0 0.0.0.0 s0/2/0
+
+!* NAT *!
+ip nat inside source static 30.15.5.3 65.20.74.20
+!* PAT *!
+ip nat pool PAT 65.20.74.19 65.20.74.19 netmask 255.255.255.248
+ip nat inside source list 1 pool PAT overload
+access-list 1 permit 30.15.5.0 0.0.0.63
+
+
+!~~ Empresa 3 ~~!
+hostname Empresa3
+interface f0/1
+ip address 192.168.55.1 255.255.255.128
+ip nat inside
+no shutdown
+interface s0/3/0
+ip address 65.20.74.34 255.255.255.240
+ip nat outside
+no shutdown
+
+ip dhcp pool EMPRESA3
+network 192.168.55.0 255.255.255.128
+default-router 192.168.55.1
+dns-server 8.8.8.8
+
+ip route 0.0.0.0 0.0.0.0 s0/3/0
+
+!* NAT *!
+ip nat inside source static 192.168.55.2 65.20.74.36
+!* PAT *!
+ip nat pool PAT 65.20.74.35 65.20.74.35 netmask 255.255.255.240
+ip nat inside source list 1 pool PAT overload
+access-list 1 permit 192.168.55.0 0.0.0.127
