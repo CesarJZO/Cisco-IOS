@@ -115,6 +115,10 @@ no shutdown
 interface s0/1/1
 ip address 8.8.8.1 255.255.255.240
 no shutdown
+!* Examen *!
+interface g0/3/0
+ip address 210.65.30.1 255.255.255.248
+no shutdown
 
 !~~ DNS ~~!
 hostname DNS
@@ -135,7 +139,7 @@ dns-server 8.8.8.8
 ip route 0.0.0.0 0.0.0.0 s0/0/0
 
 !* NAT *!
-ip nat inside source static 172.16.10.7 8.8.8.8
+ip nat inside source static 172.16.10.8 8.8.8.8
 !* PAT *!
 ip nat pool PAT 8.8.8.3 8.8.8.3 netmask 255.255.255.248
 ip nat inside source list 1 pool PAT overload
@@ -191,3 +195,27 @@ ip nat inside source static 192.168.55.2 65.20.74.36
 ip nat pool PAT 65.20.74.35 65.20.74.35 netmask 255.255.255.240
 ip nat inside source list 1 pool PAT overload
 access-list 1 permit 192.168.55.0 0.0.0.127
+
+!~~ Empresa 4 ~~!
+hostname Empresa4
+interface g0/0
+ip address 192.168.130.1 255.255.255.192
+ip nat inside
+no shutdown
+interface g0/3/0
+ip address 210.65.30.2 255.255.255.248
+ip nat outside
+no shutdown
+
+ip route 0.0.0.0 0.0.0.0 g0/3/0
+ip dhcp pool EMPRESA4
+network 192.168.130.0 255.255.255.192
+default-router 192.168.130.1
+dns-server 8.8.8.8
+
+!* NAT *!
+ip nat inside source static 192.168.130.2 210.65.30.3
+!* PAT *!
+ip nat pool PAT 210.65.30.4 210.65.30.4 netmask 255.255.255.248
+ip nat inside source list 1 pool PAT overload
+access-list 1 permit 192.168.130.0 0.0.0.63
