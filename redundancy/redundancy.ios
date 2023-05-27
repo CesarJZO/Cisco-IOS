@@ -6,6 +6,9 @@ spanning-tree vlan <vlan> priority <0-61440> (default 32768)
 ! Using root
 spanning-tree vlan <vlan> root [primary|secondary]
 
+!* Consult commands
+show spanning-tree
+
 !~~ HSRP router protocol ~~!
 !* Active router
 interface <internal interface>
@@ -36,10 +39,17 @@ switchport trunk encapsulation dot1q
 switchport nonegotiate
 ! nonegotiate is used to diable automatic trunk negotiation on the interface
 
+!~~ Etherchannel (LACP) ~~!
+!* Switch (interface configuration)
+interface range <interface1> - <interface2>
+channel-protocol lacp
+channel-group <1-48> mode [active|passive]
+
+!~~ Etherchannel (ON) ~~!
+interface range <interface1> - <interface2>
+channel-group <1-48> mode on
+
 !* Consult commands
 show ip interface brief
 show etherchannel port-channel
 show etherchannel summary
-
-! Consult
-show spanning-tree

@@ -1,28 +1,94 @@
 !~~ Core A ~~!
 spanning-tree vlan 1 root secondary
-!* Etherchanel PAgP
-interface range g0/1 - 2
+!* Erherchanel PAgP: Group 1
+interface range g1/0/2-3
 channel-protocol pagp
 channel-group 1 mode auto
-!* Portchannel 1
+! Portchannel 1
 interface port-channel 1
-switchport trunk encapsulation dot1q
 switchport mode trunk
-! Mode access
-interface range g1/0/10-11
-switchport mode access
-switchport nonegotiate
+switchport trunk encapsulation dot1q
+!* Etherchanel PAgP: Group 2
+interface range g1/0/4-5
+channel-protocol pagp
+channel-group 2 mode auto
+! Portchannel 2
+interface port-channel 2
+switchport mode trunk
+switchport trunk encapsulation dot1q
 
 !~~ Core B ~~!
 spanning-tree vlan 1 root primary
-!* Etherchanel PAgP
-interface range g0/1 - 2
+!* Etherchanel PAgP: Group 3
+interface range g1/0/4-5
 channel-protocol pagp
 channel-group 3 mode auto
-!* Portchannel 3
+! Portchannel 3
 interface port-channel 3
-switchport trunk encapsulation dot1q
 switchport mode trunk
+switchport trunk encapsulation dot1q
+!* Etherchanel PAgP: Group 4
+interface range g1/0/2-3
+channel-protocol pagp
+channel-group 4 mode auto
+! Portchannel 4
+interface port-channel 4
+switchport mode trunk
+switchport trunk encapsulation dot1q
+
+!~~ Switch 0 ~~!
+spanning-tree vlan 1 root secondary
+!* Etherchanel PAgP: Group 1
+interface range g0/1-2
+channel-protocol pagp
+channel-group 1 mode auto
+! Portchannel 1
+interface port-channel 1
+switchport mode trunk
+switchport trunk encapsulation dot1q
+!* Etherchanel PAgP: Group 3
+interface range f0/3-4
+channel-protocol pagp
+channel-group 3 mode auto
+! Portchannel 3
+interface port-channel 3
+switchport mode trunk
+switchport trunk encapsulation dot1q
+!* Etherchanel PAgP: Group 5
+interface range f0/1-2
+channel-protocol pagp
+channel-group 5 mode auto
+! Portchannel 5
+interface port-channel 5
+switchport mode trunk
+switchport trunk encapsulation dot1q
+
+!~~ Switch 1 ~~!
+spanning-tree vlan 1 root secondary
+!* Etherchanel PAgP: Group 2
+interface range g0/1-2
+channel-protocol pagp
+channel-group 2 mode auto
+! Portchannel 2
+interface port-channel 2
+switchport mode trunk
+switchport trunk encapsulation dot1q
+!* Etherchanel PAgP: Group 4
+interface range f0/3-4
+channel-protocol pagp
+channel-group 4 mode auto
+! Portchannel 4
+interface port-channel 4
+switchport mode trunk
+switchport trunk encapsulation dot1q
+!* Etherchanel PAgP: Group 5
+interface range f0/1-2
+channel-protocol pagp
+channel-group 5 mode auto
+! Portchannel 5
+interface port-channel 5
+switchport mode trunk
+switchport trunk encapsulation dot1q
 
 !~~ Telecomunicaciones ~~!
 interface s0/0/0
