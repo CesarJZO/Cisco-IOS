@@ -1,0 +1,61 @@
+!~~ Telecomunicaciones ~~!
+interface s0/0/0
+ip address 210.85.19.1 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 210.85.16.5 255.255.255.252
+no shutdown
+interface g0/2/0
+ip address 75.30.15.1 255.255.255.252
+no shutdown
+interface s0/1/0
+ip address 160.80.40.1 255.255.255.252
+no shutdown
+interface s0/1/1
+ip address 45.34.23.1 255.255.255.252
+no shutdown
+
+ip route 192.168.50.0 255.255.255.128
+ip route 8.8.8.0 255.255.255.240
+ip route 10.20.30.0 255.255.255.224
+ip route 172.30.15.0 255.255.255.128
+
+!~~ Empresa 1 (Redundant router) ~~!
+interface s0/1/0
+ip address 210.85.19.2 255.255.255.252
+no shutdown
+
+!~~ Empresa 1 (Active router) ~~!
+interface s0/1/0
+ip address 210.85.19.6 255.255.255.252
+no shutdown
+
+!~~ DNS ~~!
+interface g0/0/0
+ip address 75.30.15.2 255.255.255.252
+no shutdown
+interface s0/0
+ip address 8.8.8.1 255.255.255.240
+no shutdown
+
+ip route 0.0.0.0 0.0.0.0 g0/0/0
+
+!~~ Empresa 2 ~~!
+interface s0/0/0
+ip address 160.80.40.2 255.255.255.252
+no shutdown
+interface g0/0
+ip address 10.20.30.1 255.255.255.224
+no shutdown
+
+ip route 0.0.0.0 0.0.0.0 s0/0/0
+
+!~~ Empresa 3 ~~!
+interface s0/0/0
+ip address 45.34.23.2 255.255.255.252
+no shutdown
+interface g0/0
+ip address 172.30.15.1 255.255.255.128
+no shutdown
+
+ip route 0.0.0.0 0.0.0.0 s0/0/0
