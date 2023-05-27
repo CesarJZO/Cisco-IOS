@@ -1,0 +1,45 @@
+!~~ Root bridge ~~!
+!* Switch
+! Using priority
+spanning-tree vlan <vlan> priority <0-61440> (default 32768)
+! Priority allows values of 0-61440 in increments of 4096: 0 4096 8192 12288 16384 20480 24576 28672 32768 36864 40960 45056 49152 53248 57344 61440
+! Using root
+spanning-tree vlan <vlan> root [primary|secondary]
+
+!~~ HSRP router protocol ~~!
+!* Active router
+interface <internal interface>
+ip address <ip> <mask> (physical)
+standby <group> ip <ip> (virtual)
+standby <group> priority <0-255> (default 100)
+standby <group> preempt
+standby <group> track <external interface>
+! Where <group> is the same for all routers in the same HSRP group and it can be a value of 0-4095
+!* Standby router
+interface <internal interface>
+ip address <ip> <mask> (physical)
+standby <group> ip <ip> (virtual)
+standby <group> preempt
+standby <group> track <external interface>
+! Virtual ip is the same as the active router and can be optionally configured
+
+!~~ Etherchannel (PAgP) ~~!
+!* Switch (interface configuration)
+interface range <interface1> - <interface2>
+channel-protocol pagp
+channel-group <1-6> mode [auto|desirable]
+! channel-group and port-channel must be the same number
+!* Switch (port-channel configuration)
+interface port-channel <1-6>
+switchport mode trunk
+switchport trunk encapsulation dot1q
+switchport nonegotiate
+! nonegotiate is used to diable automatic trunk negotiation on the interface
+
+!* Consult commands
+show ip interface brief
+show etherchannel port-channel
+show etherchannel summary
+
+! Consult
+show spanning-tree
