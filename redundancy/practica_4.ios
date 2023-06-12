@@ -7,7 +7,7 @@ channel-group 1 mode auto
 ! Portchannel 1
 interface port-channel 1
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
 !* Etherchanel PAgP: Group 2
 interface range g1/0/4-5
 channel-protocol pagp
@@ -15,7 +15,11 @@ channel-group 2 mode auto
 ! Portchannel 2
 interface port-channel 2
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
+! Interfaces connected to end devices
+interface range g1/0/10-11
+switchport mode access
+switchport nonegotiate
 
 !~~ Core B ~~!
 spanning-tree vlan 1 root primary
@@ -26,7 +30,7 @@ channel-group 3 mode auto
 ! Portchannel 3
 interface port-channel 3
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
 !* Etherchanel PAgP: Group 4
 interface range g1/0/2-3
 channel-protocol pagp
@@ -34,10 +38,13 @@ channel-group 4 mode auto
 ! Portchannel 4
 interface port-channel 4
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
+! Interface connected to end devices
+interface g1/0/13
+switchport mode access
+switchport nonegotiate
 
 !~~ Switch 0 ~~!
-spanning-tree vlan 1 root secondary
 !* Etherchanel PAgP: Group 1
 interface range g0/1-2
 channel-protocol pagp
@@ -45,7 +52,7 @@ channel-group 1 mode desirable
 ! Portchannel 1
 interface port-channel 1
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
 !* Etherchanel PAgP: Group 3
 interface range f0/3-4
 channel-protocol pagp
@@ -53,7 +60,7 @@ channel-group 3 mode desirable
 ! Portchannel 3
 interface port-channel 3
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
 !* Etherchanel PAgP: Group 5
 interface range f0/1-2
 channel-protocol pagp
@@ -61,10 +68,15 @@ channel-group 5 mode desirable
 ! Portchannel 5
 interface port-channel 5
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
+! Interfaces connected to end devices
+interface f0/15
+switchport mode access
+interface f0/20
+switchport mode access
 
 !~~ Switch 1 ~~!
-spanning-tree vlan 1 root secondary
+! If priority is the same, the switch with the lowest MAC address on 
 !* Etherchanel PAgP: Group 2
 interface range f0/3-4
 channel-protocol pagp
@@ -72,7 +84,7 @@ channel-group 2 mode desirable
 ! Portchannel 2
 interface port-channel 2
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
 !* Etherchanel PAgP: Group 4
 interface range g0/1-2
 channel-protocol pagp
@@ -80,7 +92,7 @@ channel-group 4 mode desirable
 ! Portchannel 4
 interface port-channel 4
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
 !* Etherchanel PAgP: Group 5
 interface range f0/1-2
 channel-protocol pagp
@@ -88,14 +100,19 @@ channel-group 5 mode desirable
 ! Portchannel 5
 interface port-channel 5
 switchport mode trunk
-switchport trunk encapsulation dot1q
+switchport trunk allowed vlan 1
+! Interfaces connected to end devices
+interface f0/11
+switchport mode access
+interface f0/17
+switchport mode access
 
 !~~ Telecomunicaciones ~~!
 interface s0/0/0
 ip address 210.85.19.1 255.255.255.252
 no shutdown
 interface s0/0/1
-ip address 210.85.16.5 255.255.255.252
+ip address 210.85.19.5 255.255.255.252
 no shutdown
 interface g0/2/0
 ip address 75.30.15.1 255.255.255.252
@@ -107,22 +124,24 @@ interface s0/1/1
 ip address 45.34.23.1 255.255.255.252
 no shutdown
 !* Static routes *!
-ip route 192.168.50.0 255.255.255.128
-ip route 8.8.8.0 255.255.255.240
-ip route 10.20.30.0 255.255.255.224
-ip route 172.30.15.0 255.255.255.128
+ip route 192.168.50.0 255.255.255.128 s0/0/0 200
+ip route 192.168.50.0 255.255.255.128 s0/0/1
+ip route 8.8.8.0 255.255.255.240 g0/2/0
+ip route 10.20.30.0 255.255.255.224 s0/1/0
+ip route 172.30.15.0 255.255.255.128 s0/1/1
 
 !~~ Empresa 1 (R1) ~~!
 interface s0/1/0
 ip address 210.85.19.2 255.255.255.252
 no shutdown
 interface g0/0
-ip address 192.168.50.12 255.255.255.128
+ip address 192.168.50.10 255.255.255.128
+no shutdown
 !* HSRP (Standby)
 standby 24 ip 192.168.50.1
+standby 24 priority 100
 standby 24 preempt
 standby 24 track s0/1/0
-no shutdown
 ! Default route
 ip route 0.0.0.0 0.0.0.0 s0/1/0
 
@@ -130,14 +149,14 @@ ip route 0.0.0.0 0.0.0.0 s0/1/0
 interface s0/1/0
 ip address 210.85.19.6 255.255.255.252
 no shutdown
-interface g0/1
-ip address 192.168.50.14 255.255.225.128
+interface g0/0
+ip address 192.168.50.11 255.255.255.128
+no shutdown
 !* HSRP (Active)
 standby 24 ip 192.168.50.1
-standby 24 priority 150
+standby 24 priority 109
 standby 24 preempt
 standby 24 track s0/1/0
-no shutdown
 ! Default route
 ip route 0.0.0.0 0.0.0.0 s0/1/0
 
@@ -145,10 +164,10 @@ ip route 0.0.0.0 0.0.0.0 s0/1/0
 interface g0/0/0
 ip address 75.30.15.2 255.255.255.252
 no shutdown
-interface s0/0
+interface g0/0
 ip address 8.8.8.1 255.255.255.240
 no shutdown
-!* Default route *!
+!* Default route
 ip route 0.0.0.0 0.0.0.0 g0/0/0
 
 !~~ Empresa 2 ~~!
@@ -170,3 +189,5 @@ ip address 172.30.15.1 255.255.255.128
 no shutdown
 !* Default route *!
 ip route 0.0.0.0 0.0.0.0 s0/0/0
+
+show spanning-tree 
