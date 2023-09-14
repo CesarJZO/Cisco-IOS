@@ -1,0 +1,23 @@
+!* Disable DNS lookup on R1 and R3
+no ip domain-lookup
+
+!* Configure min password length to 7 on R1 and R3
+security passwords min-length 7
+
+!* Enable password encryption on R1 and R3
+service password-encryption
+! Use scrypt instead of md5
+security encryption scrypt
+enable algorithm-type scrypt secret 0 passenable123
+
+!* Enable console password locally with a timeout of 3 minutes
+line console
+password 0 passconsole123
+login local
+exec-timeout 3
+
+!* Add a login banner on R1 and R3
+banner login 'Solo usuarios autorizados'
+
+!* Add a user with password encryption using scrypt
+username admin algorithm-type scrypt secret 0 userpass123
