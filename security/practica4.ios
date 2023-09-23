@@ -1,0 +1,82 @@
+!~~ R1 ~~!
+!* Configure basic settings
+! Configure host name
+hostname R1
+! Configure basic addressing
+interface s0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+interface g0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+! Configure a clock rate for the DCE serial connection
+interface s0/0/0
+clock rate 64000
+! Disable DNS lookup
+no ip domain-lookup
+!* Configure OSPF routing
+router ospf 12
+network 10.1.1.0 0.0.0.3 area 51
+network 192.168.1.0 0.0.0.255 area 51
+passive-interface g0/1
+router-id 1.1.1.1
+!* Save configuration
+end
+copy running-config startup-config
+
+!~~ R2 ~~!
+!* Configure basic settings
+! Configure host name
+hostname R2
+! Configure basic addressing
+interface s0/0/0
+ip address 10.1.1.1 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+! Configure a clock rate for the DCE serial connection
+interface s0/0/0
+clock rate 64000
+interface s0/0/1
+clock rate 64000
+! Disable DNS lookup
+no ip domain-lookup
+!* Configure OSPF routing
+router ospf 12
+network 10.1.1.0 0.0.0.3 area 51
+network 10.2.2.0 0.0.0.3 area 51
+router-id 2.2.2.2
+!* Save configuration
+end
+copy running-config startup-config
+
+!~~ R3 ~~!
+!* Configure basic settings
+! Configure host name
+hostname R3
+! Configure basic addressing
+interface s0/0/1
+ip address 10.2.2.2 255.255.255.252
+no shutdown
+interface g0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+! Configure a clock rate for the DCE serial connection
+interface s0/0/1
+clock rate 64000
+! Disable DNS lookup
+no ip domain-lookup
+!* Configure OSPF routing
+router ospf 12
+network 10.2.2.0 0.0.0.3 area 51
+network 192.168.3.0 0.0.0.255 area 51
+passive-interface g0/1
+router-id 3.3.3.3
+!* Save configuration
+end
+copy running-config startup-config
+
+! Verify OSPF routing
+show ip route
+show ip ospf neighbor
