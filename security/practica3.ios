@@ -1,0 +1,71 @@
+!~~ PCA ~~!
+!* Configure hostname as RTA
+hostname RTA
+!* Configure interface g0/0/0
+interface g0/0/0
+ip address 172.16.1.1 255.255.255.0
+no shutdown
+!* Encrypt all plaintext passwords
+service password-encryption
+!* Set the minimum password length to 10
+security passwords min-length 10
+!* Set a strong secret password
+enable secret cisco12345
+!* Disable DNS lookup
+no ip domain-lookup
+!* Set the domain name to netsec.com
+ip domain-name netsec.com
+!* Create a user with a strong encrypted password
+username Cesar secret cisco12345
+!* Generate 1024-bit RSA keys
+crypto key generate rsa
+!* Block anyone for three minutes who fails to log in after four attempts within a two-minute period
+login block-for 180 attempts 4 within 120
+!* Configure all VTY lines for SSH access and use the local user profiles for authentiacion
+line vty 0 4
+transport input ssh
+login local
+!* Set the EXEC mode timeout to 6 minutes on the VTY lines
+exec-timeout 6
+!* Save the configuration to NVRAM
+end
+copy running-config startup-config
+!* On PCA connect to RTA using SSH
+ssh -l Cesar 172.16.1.1
+
+!~~ SW1 ~~!
+!* Configure hostname as SW1
+hostname SW1
+!* Configure IP addressing on SW1 VLAN1 and enable the interface
+interface vlan 1
+ip address 172.16.1.2 255.255.255.0
+no shutdown
+!* Configure the default gateway address
+ip default-gateway 172.16.1.1
+!* Disable all unused switch ports
+interface range f0/2-24
+shutdown
+interface g0/2
+shutdown
+!* Encrypt all plaintext passwords
+service password-encryption
+!* Set a strong secret password
+enable secret cisco12345
+!* Disable DNS lookup
+no ip domain-lookup
+!* Set the domain name to netsec.com
+ip domain-name netsec.com
+!* Create a user with a strong encrypted password
+username Cesar secret cisco12345
+!* Generate 1024-bit RSA keys
+crypto key generate rsa
+!* Configure all VTY lines for SSH access and use the local user profiles for authentiacion
+line vty 0 4
+transport input ssh
+login local
+!* Set the EXEC mode timeout to 6 minutes on the VTY lines
+exec-timeout 6
+!* Save the configuration to NVRAM
+end
+copy running-config startup-config
+
