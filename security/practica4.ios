@@ -15,14 +15,50 @@ clock rate 64000
 ! Disable DNS lookup
 no ip domain-lookup
 !* Configure OSPF routing
-router ospf 12
-network 10.1.1.0 0.0.0.3 area 51
-network 192.168.1.0 0.0.0.255 area 51
+router ospf 1
+network 10.1.1.0 0.0.0.3 area 0
+network 192.168.1.0 0.0.0.255 area 0
 passive-interface g0/1
 router-id 1.1.1.1
 !* Save configuration
 end
 copy running-config startup-config
+!! Part 2: Control Administrative Access for Routers
+!* Confiugre and encrypt passwords
+security passwords min-length 10
+enable secret cisco12345
+! Configure basic console, auxiliary port and virtual access lines
+line console 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+! Configure a password for the AUX port
+line aux 0
+password ciscoauxpass
+exec-timeout 5 0
+login
+! Configure the password for the VTY lines
+line vty 0 4
+password ciscovtypass
+exec-timeout 5 0
+transport input telnet
+login
+!* Encrypt clear text passwords
+service password-encryption
+!* Configure a warning message to display prior to login
+banner motd $Acceso no autorizado esta prohibido!!$
+!* Configure enhanced username password security
+username user01 secret user01pass
+!* Test the new account by logging to the console
+line console 0
+login local
+!* Test the new account by logging from a Telnet session
+line vty 0 4
+login local
+! For added security, set the AUX port to use the locally defined login account
+line aux 0
+login local
 
 !~~ R2 ~~!
 !* Configure basic settings
@@ -43,9 +79,9 @@ clock rate 64000
 ! Disable DNS lookup
 no ip domain-lookup
 !* Configure OSPF routing
-router ospf 12
-network 10.1.1.0 0.0.0.3 area 51
-network 10.2.2.0 0.0.0.3 area 51
+router ospf 1
+network 10.1.1.0 0.0.0.3 area 0
+network 10.2.2.0 0.0.0.3 area 0
 router-id 2.2.2.2
 !* Save configuration
 end
@@ -68,14 +104,50 @@ clock rate 64000
 ! Disable DNS lookup
 no ip domain-lookup
 !* Configure OSPF routing
-router ospf 12
-network 10.2.2.0 0.0.0.3 area 51
-network 192.168.3.0 0.0.0.255 area 51
+router ospf 1
+network 10.2.2.0 0.0.0.3 area 0
+network 192.168.3.0 0.0.0.255 area 0
 passive-interface g0/1
 router-id 3.3.3.3
 !* Save configuration
 end
 copy running-config startup-config
+!! Part 2: Control Administrative Access for Routers
+!* Confiugre and encrypt passwords
+security passwords min-length 10
+enable secret cisco12345
+! Configure basic console, auxiliary port and virtual access lines
+line console 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+! Configure a password for the AUX port
+line aux 0
+password ciscoauxpass
+exec-timeout 5 0
+login
+! Configure the password for the VTY lines
+line vty 0 4
+password ciscovtypass
+exec-timeout 5 0
+transport input telnet
+login
+!* Encrypt clear text passwords
+service password-encryption
+!* Configure a warning message to display prior to login
+banner motd $Acceso no autorizado esta prohibido!!$
+!* Configure enhanced username password security
+username user01 secret user01pass
+!* Test the new account by logging to the console
+line console 0
+login local
+!* Test the new account by logging from a Telnet session
+line vty 0 4
+login local
+! For added security, set the AUX port to use the locally defined login account
+line aux 0
+login local
 
 ! Verify OSPF routing
 show ip route
