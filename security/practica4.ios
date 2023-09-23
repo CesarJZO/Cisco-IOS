@@ -76,6 +76,14 @@ ip ssh version 2
 !* Configure SHH timeouts and authentication parameters
 ip ssh time-out 90
 ip ssh authentication-retries 2
+!* Use the AAA authentication and authorization defaults
+aaa new-model
+aaa authentication login default local
+aaa authorization exec default local
+ip scp server enable
+!* Copy the running config to flash on R1
+copy running-config flash:
+R1-Config
 
 !~~ R2 ~~!
 !* Configure basic settings
@@ -182,7 +190,22 @@ ip ssh version 2
 !* Configure SHH timeouts and authentication parameters
 ip ssh time-out 90
 ip ssh authentication-retries 2
+!* Use the AAA authentication and authorization defaults
+aaa new-model
+aaa authentication login default local
+aaa authorization exec default local
+ip scp server enable
+!* Use SCP command on R3 to pull the configuration file from R1
+copy scp: flash:
+10.1.1.1
+admin
+R1-Config
 
+cisco12345
+! Issue the more command to view the contents of the R1-Config file
+more R1-Config
+! Save the configuration
+copy running-config startup-config
 
 ! Verify OSPF routing
 show ip route
