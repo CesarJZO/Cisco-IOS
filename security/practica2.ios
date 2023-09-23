@@ -1,23 +1,89 @@
-!* Disable DNS lookup on R1 and R3
+!~~ Update OS ~~!
+! Old version: c1900-universalk9-mz.SPA.151-4.M4.bin
+! New version: c1900-universalk9-mz.SPA.155-3.M4a.bin           
+!* Add a Server-PT with an IP of 10.10.10.0/30 in this case (R1)
+interface g0/1
+ip address 10.10.10.1 255.255.255.252
+no shutdown
+! In privileged mode, though it's not necessary because the file is already in flash
+copy tftp: flash:
+! Enter the IP of the server and the name of the file
+conf t
+boot system flash c1900-universalk9-mz.SPA.155-3.M4a.bin
+! Test
+username Bob algorithm-type scrypt secret cisco123
+
+!~~ R1 ~~!
+! Enable ports
+interface g0/1
+ip address 10.10.10.1 255.255.255.252
+no shutdown
+interface s0/0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+interface g0/0
+ip address 200.117.97.1 255.255.255.0
+no shutdown
+!* Boot from the new OS
+boot system flash c1900-universalk9-mz.SPA.155-3.M4a.bin
+! Reload after saving (in privileged mode)
+exit
+write
+reload
+!* 1. Disable DNS lookup
 no ip domain-lookup
-
-!* Configure min password length to 7 on R1 and R3
+!* 2. Configure min password length to 7
 security passwords min-length 7
-
-!* Enable password encryption on R1 and R3
+!* 3. Enable password encryption
 service password-encryption
-! Use scrypt instead of md5
-security encryption scrypt
-enable algorithm-type scrypt secret 0 passenable123
-
-!* Enable console password locally with a timeout of 3 minutes
-line console
-password 0 passconsole123
+!* 3.1 Configure enable password using scrypt, password must be passenable123
+enable algorithm-type scrypt secret passenable123
+!* 3.2 Enable console password locally with a timeout of 3 minutes
+line console 0
+password user123
 login local
 exec-timeout 3
+!* 4. Add a login banner
+banner motd $Solo usuarios autorizados$
+!* 5. Add user Manuel with scrypt pasword userpass123
+username Manuel algorithm-type scrypt secret userpass123
 
-!* Add a login banner on R1 and R3
-banner login 'Solo usuarios autorizados'
+!~~ R3 ~~!
+!* Boot from the new OS
+boot system flash c1900-universalk9-mz.SPA.155-3.M4a.bin
+! Reload after saving (in privileged mode)
+exit
+write
+reload
+! Enable ports
+interface s0/0/1
+ip address 10.0.0.6 255.255.255.252
+no shutdown
+interface g0/0
+ip address 200.79.200.1 255.255.255.0
+no shutdown
+!* 1. Disable DNS lookup
+no ip domain-lookup
+!* 2. Configure min password length to 7
+security passwords min-length 7
+!* 3. Enable password encryption
+service password-encryption
+!* 3.1 Configure enable password using scrypt, password must be passenable123
+enable algorithm-type scrypt secret passenable123
+!* 3.2 Enable console password locally with a timeout of 3 minutes
+line console 0
+password user123
+login local
+exec-timeout 3
+!* 4. Add a login banner
+banner motd $Solo usuarios autorizados$
+!* 5. Add user Manuel with scrypt pasword userpass123
+username Manuel algorithm-type scrypt secret userpass123
 
-!* Add a user with password encryption using scrypt
-username admin algorithm-type scrypt secret 0 userpass123
+!~~ R2 ~~!
+! Remove previous routes
+no ip route 200.10.10.0 255.255.255.0 s0/0/0
+no ip route 200.20.20.0 255.255.255.0 s0/0/1
+! Add new routes
+ip route 200.117.97.0 255.255.255.0 s0/0/0
+ip route 200.79.200.0 255.255.255.0 s0/0/1
