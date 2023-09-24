@@ -22,7 +22,7 @@ passive-interface f0/0
 
 ![*] Configure and encrypt password
 enable secret cisco12345
-![*] Add user Frank and set a password
+![ ] Add user Frank and set a password
 username Frank password usuariopass
 ![*] Set minimum password length
 security passwords min-length 12
@@ -33,9 +33,9 @@ password Admintot1234
 exec-timeout 7
 ![*] Set service password encryption
 service password-encryption
-![*] Set banner
-banner motd #Acceso no autorizado será consignado#
-![*] Add user Carlos with a password
+![ ] Set banner
+banner motd $Acceso no autorizado sera consignado$
+![ ] Add user Carlos with a password
 username Carlos secret usuario1234
 ![*] Store account locally
 login local
@@ -44,7 +44,7 @@ ip domain-name laboratorio.com
 crypto key generate rsa
 2048
 ip ssh version 2
-![*] Add user admin with a password and set privilege level to 15
+![ ] Add user admin with a password and set privilege level to 15
 username admin privilege 15 password admin1234567
 ![*] Assign SSH to VTY lines with a security level of 15
 line vty 0 4
@@ -69,7 +69,7 @@ no shutdown
 interface s0/0/1
 ip address 10.199.5.1 255.255.255.252
 no shutdown
-![ ] Set EIGRP protocol
+![*] Set EIGRP protocol
 router eigrp 1
 network 10.182.179.0 0.0.0.3
 network 10.199.5.0 0.0.0.3
