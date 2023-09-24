@@ -1,0 +1,134 @@
+!~~ R1 ~~!
+hostname R1
+![*] Disable DNS lookup
+no ip domain-lookup
+![*] Set clock rate to 128000
+clock rate 128000
+!@ IP addressing
+interface s0/0/0
+ip address 10.182.179.1 255.255.255.252
+no shutdown
+interface f0/0
+ip address 203.112.182.1 255.255.255.0
+no shutdown
+![*] Set EIGRP protocol
+router eigrp 1
+network 10.182.179.0 0.0.0.3
+network 203.112.182.0 0.0.0.255
+no auto-summary
+eigrp router-id 1.1.1.1
+![*] Set LAN interface to passive
+passive-interface f0/0
+
+![*] Configure and encrypt password
+enable secret cisco12345
+![*] Add user Frank and set a password
+username Frank password usuariopass
+![*] Set minimum password length
+security passwords min-length 12
+![*] Set console password
+line console 0
+password Admintot1234
+![*] Set inactivity timer to 7 minutes
+exec-timeout 7
+![*] Set service password encryption
+service password-encryption
+![*] Set banner
+banner motd #Acceso no autorizado será consignado#
+![*] Add user Carlos with a password
+username Carlos secret usuario1234
+![*] Store account locally
+login local
+![*] Configure SSH service
+ip domain-name laboratorio.com
+crypto key generate rsa
+2048
+ip ssh version 2
+![*] Add user admin with a password and set privilege level to 15
+username admin privilege 15 password admin1234567
+![*] Assign SSH to VTY lines with a security level of 15
+line vty 0 4
+transport input ssh
+login local
+privilege level 15
+![*] Set 2 attempts before disconnecting with a 120 second delay
+ip ssh authentication-retries 2
+ip ssh time-out 120
+
+
+!~~ R2 ~~!
+hostname R2
+!* Disable DNS lookup
+no ip domain-lookup
+!* Set clock rate to 128000
+clock rate 128000
+!@ IP addressing
+interface s0/0/0
+ip address 10.182.179.2 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 10.199.5.1 255.255.255.252
+no shutdown
+![ ] Set EIGRP protocol
+router eigrp 1
+network 10.182.179.0 0.0.0.3
+network 10.199.5.0 0.0.0.3
+no auto-summary
+eigrp router-id 2.2.2.2
+
+!~~ R3 ~~!
+hostname R3
+!* Disable DNS lookup
+no ip domain-lookup
+!* Set clock rate to 128000
+clock rate 128000
+!@ IP addressing
+interface s0/0/1
+ip address 10.199.5.2 255.255.255.252
+no shutdown
+interface s0/0/0
+ip address 10.117.42.1 255.255.255.252
+no shutdown
+![*] Set EIGRP protocol
+router eigrp 1
+network 10.199.5.0 0.0.0.3
+network 10.117.42.0 0.0.0.3
+no auto-summary
+eigrp router-id 3.3.3.3
+
+
+!~~ R4 ~~!
+hostname R4
+![*] Disable DNS lookup
+no ip domain-lookup
+![*] Set clock rate to 128000
+clock rate 128000
+!@ IP addressing
+interface s0/0/0
+ip address 10.117.42.2 255.255.255.252
+no shutdown
+interface f0/0
+ip address 20.176.133.1 255.255.255.0
+no shutdown
+![*] Set EIGRP protocol
+router eigrp 1
+network 10.117.42.0 0.0.0.3
+network 20.176.133.0 0.0.0.255
+no auto-summary
+eigrp router-id 4.4.4.4
+![*] Set LAN interface to passive
+passive-interface f0/0
+
+![*] Configure and encrypt password
+enable secret cisco12345
+![*] Add user Frank and set a password
+username Frank password usuariopass
+![*] Set minimum password length
+security passwords min-length 12
+![*] Set console password
+line console 0
+password Admintot1234
+![*] Set inactivity timer to 7 minutes
+exec-timeout 7
+![*] Set service password encryption
+service password-encryption
