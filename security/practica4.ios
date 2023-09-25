@@ -84,6 +84,53 @@ ip scp server enable
 !* Copy the running config to flash on R1
 copy running-config flash:
 R1-Config
+!@ Part 3: Configure Administrative Roles
+![ ] Enable root view
+enable view
+cisco12345
+![ ] Create the admin1 view, establish a password and assign privileges
+parser view admin1
+secret admin1pass
+commands exec include all show
+commands exec include all configure terminal
+commands exec include all debug
+end
+enable view admin1
+admin1pass
+show parser view
+![ ] Create the admin2 view, establish a password and assign privileges
+enable view
+parser view admin2
+secret admin2pass
+commands exec include all show
+end
+enable view admin2
+admin2pass
+show parser view
+![ ] Create the tech view, establish a password and assign privileges
+enable view
+parser view tech
+secret techpasswd
+commands exec include show version
+commands exec include show interfaces
+commands exec include show ip interface brief
+commands exec include show parser view
+end
+enable view tech
+techpasswd
+show parser view
+!@ Part 4: Configure IOS Resilience and Management Reporting
+![ ] Secure the Cisco IOS image and archive a copy of the running configuration
+secure boot-image
+secure boot-config
+![ ] Verify that your image and configuration are secure
+show secure bootset
+![ ] Display the files in flash memory for R1
+show flash:
+![ ] Disable the IOS Resilient Configuration feature
+no secure boot-image
+no secure boot-config
+
 
 !~~ R2 ~~!
 !* Configure basic settings
@@ -212,3 +259,37 @@ show ip route
 show ip ospf neighbor
 ! Verify SSH configuration
 show ip ssh
+!@ Part 3: Configure Administrative Roles
+![ ] Enable root view
+enable view
+![ ] Create the admin1 view, establish a password and assign privileges
+parser view admin1
+secret admin1pass
+commands exec include all show
+commands exec include all configure terminal
+commands exec include all debug
+end
+enable view admin1
+admin1pass
+show parser view
+![ ] Create the admin2 view, establish a password and assign privileges
+enable view
+parser view admin2
+secret admin2pass
+commands exec include all show
+end
+enable view admin2
+admin2pass
+show parser view
+![ ] Create the tech view, establish a password and assign privileges
+enable view
+parser view tech
+secret techpasswd
+commands exec include show version
+commands exec include show interfaces
+commands exec include show ip interface brief
+commands exec include show parser view
+end
+enable view tech
+techpasswd
+show parser view
