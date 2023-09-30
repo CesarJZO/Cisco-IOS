@@ -1,0 +1,68 @@
+![ ] Update OS if necessary
+boot system flash c1900-universalk9-mz.SPA.155-3.M4a.bin
+exit
+write
+reload
+
+! Verify OS version
+show version
+show flash
+! Copy boot file from TFTP server
+copy tftp:{ip} flash:{file}
+
+![ ] Disable DNS lookup on R1
+no ip domain-lookup
+
+![ ] Configure SSH v2 with span.com as the domain name
+ip domain-name span.com
+crypto key generate rsa
+1024
+ip ssh version 2
+
+!* Condifugre these users
+    !*  User    Privilege   Password
+    ![ ] Smith,     5, cisco5
+    username Smith privilege 5 algorithm-type scrypt secret cisco5
+    ![ ] Joe,       7, cisco7
+    username Joe privilege 7 algorithm-type scrypt secret cisco7
+    ![ ] Andrea,   10, cisco10
+    username Andrea privilege 10 algorithm-type scrypt secret cisco10
+    ![ ] admin-15, 15, cisco15
+    username admin-15 privilege 15 algorithm-type scrypt secret cisco15
+
+![ ] Enable secret password "cisco"
+enable secret cisco
+
+![ ] Use SSH on VTY lines locally
+line vty 0 4
+transport input ssh
+login local
+
+![ ] Configure privilege levels with theese commands
+    ![ ] 5: debug
+    privilege exec level 5 debug
+    ![ ] 7: undebug
+    privilege exec level 7 undebug
+    ![ ] 10: configure terminal
+    privilege exec level 10 configure terminal
+
+![ ] Create these views
+aaa new-model
+enable view
+    ![ ] SOPORTE: all show, configure terminal, and all ip commands. Use soporte-pass as the password.
+    parser view SOPORTE
+    secret soporte-pass
+    commands exec include all show
+    commands exec include configure terminal
+    commands exec include all ip
+    ![ ] USUARIOS: show ip route, debug, and undebug commands. Use usuarios-pass as the password.
+    parser view USUARIOS
+    secret usuarios-pass
+    commands exec include show ip route
+    commands exec include debug
+    commands exec include undebug
+    ![ ] MITO: configure terminal and router commands.
+    parser view MITO
+    secret mito-pass
+    commands exec include configure terminal
+    commands exec include configure
