@@ -130,6 +130,12 @@ show flash:
 ![ ] Disable the IOS Resilient Configuration feature
 no secure boot-image
 no secure boot-config
+![ ] Configure as NTP client
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp server 10.1.1.2
+ntp update-calendar
 
 
 !~~ R2 ~~!
@@ -158,6 +164,15 @@ router-id 2.2.2.2
 !* Save configuration
 end
 copy running-config startup-config
+!@ Part 4: Configure IOS Resilience and Management Reporting
+![ ] Set Up the NTP Master using Cisco IOS commands on R2
+show clock
+clock set 20:12:00 Dec 17 2014
+configure terminal
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp master 4
 
 !~~ R3 ~~!
 !* Configure basic settings
@@ -293,3 +308,20 @@ end
 enable view tech
 techpasswd
 show parser view
+!@ Part 4: Configure IOS Resilience and Management Reporting
+![ ] Secure the Cisco IOS image and archive a copy of the running configuration
+secure boot-image
+secure boot-config
+![ ] Verify that your image and configuration are secure
+show secure bootset
+![ ] Display the files in flash memory for R1
+show flash:
+![ ] Disable the IOS Resilient Configuration feature
+no secure boot-image
+no secure boot-config
+![ ] Configure as NTP client
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp server 10.2.2.2
+ntp update-calendar
