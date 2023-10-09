@@ -33,6 +33,17 @@ service password-encryption
 !* Configure a login warning banner
 banner motd $Unauthorized access strictly prohibited!$
 !@ Part 2: Configure Local Authentication
+!* Configure the local user database
+username user01 algorithm-type scrypt secret user01pass
+!* Configure local authentication for the console line and login
+line console 0
+login local
+!* Set the VTY lines to use local authentication
+line vty 0 4
+login local
+transport input telnet
+line aux 0
+login local
 !@ Part 3: Configure Local Authentication Using AAA
 !@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
 
@@ -51,7 +62,6 @@ no shutdown
 !* Configure static routing on the routers
 ip route 192.168.1.0 255.255.255.0 s0/0/0
 ip route 192.168.3.0 255.255.255.0 s0/0/1
-!@ Part 2: Configure Local Authentication
 !@ Part 3: Configure Local Authentication Using AAA
 !@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
 
@@ -89,18 +99,22 @@ service password-encryption
 !* Configure a login warning banner
 banner motd $Unauthorized access strictly prohibited!$
 !@ Part 2: Configure Local Authentication
+!* Configure the local user database
+username user01 algorithm-type scrypt secret user01pass
+!* Configure local authentication for the console line and login
+line console 0
+login local
+!* Set the VTY lines to use local authentication
+line vty 0 4
+login local
+transport input telnet
+line aux 0
+login local
 !@ Part 3: Configure Local Authentication Using AAA
 !@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
 
 !~~ All ~~!
 !* Save the basic running configuration for each router
-![ ] Save before Part 2
 copy running-config startup-config
-![ ] Access passwords
-enable secret cisco
-line console 0
-password cisco
-login local
-line vty 0 4
-password cisco
-login local
+![ ] Save before Part 2
+![ ] Save before Part 3
