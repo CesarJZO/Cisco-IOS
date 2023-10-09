@@ -1,0 +1,106 @@
+!~~ R1 ~~!
+!@ Part 1: Configure Basic Device Settings
+!* Configure basic settings for each router
+hostname R1
+no ip domain-lookup
+interface g0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+interface s0/0/0
+ip address 10.1.1.1 255.255.255.252
+clock rate 64000
+no shutdown
+!* Configure static routing on the routers
+ip route 0.0.0.0 0.0.0.0 s0/0/0
+!* Configure and encrypt passwords
+security passwords min-length 10
+enable algorithm-type scrypt secret cisco12345
+!* Configure the basic console, auxiliary port, and vty lines
+line console 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+line aux 0
+password ciscoauxpass
+exec-timeout 5 0
+login
+line vty 0 4
+password ciscovtypass
+exec-timeout 5 0
+login
+service password-encryption
+!* Configure a login warning banner
+banner motd $Unauthorized access strictly prohibited!$
+!@ Part 2: Configure Local Authentication
+!@ Part 3: Configure Local Authentication Using AAA
+!@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
+
+!~~ R2 ~~!
+!@ Part 1: Configure Basic Device Settings
+!* Configure basic settings for each router
+hostname R2
+no ip domain-lookup
+interface s0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 10.2.2.2 255.255.255.252
+clock rate 64000
+no shutdown
+!* Configure static routing on the routers
+ip route 192.168.1.0 255.255.255.0 s0/0/0
+ip route 192.168.3.0 255.255.255.0 s0/0/1
+!@ Part 2: Configure Local Authentication
+!@ Part 3: Configure Local Authentication Using AAA
+!@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
+
+!~~ R3 ~~!
+!@ Part 1: Configure Basic Device Settings
+!* Configure basic settings for each router
+hostname R3
+no ip domain-lookup
+interface g0/1
+ip address 192.168.3.1 255.255
+no shutdown
+interface s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+!* Configure static routing on the routers
+ip route 0.0.0.0 0.0.0.0 s0/0/1
+!* Configure and encrypt passwords
+security passwords min-length 10
+enable algorithm-type scrypt secret cisco12345
+!* Configure the basic console, auxiliary port, and vty lines
+line console 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+line aux 0
+password ciscoauxpass
+exec-timeout 5 0
+login
+line vty 0 4
+password ciscovtypass
+exec-timeout 5 0
+login
+service password-encryption
+!* Configure a login warning banner
+banner motd $Unauthorized access strictly prohibited!$
+!@ Part 2: Configure Local Authentication
+!@ Part 3: Configure Local Authentication Using AAA
+!@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
+
+!~~ All ~~!
+!* Save the basic running configuration for each router
+![ ] Save before Part 2
+copy running-config startup-config
+![ ] Access passwords
+enable secret cisco
+line console 0
+password cisco
+login local
+line vty 0 4
+password cisco
+login local
