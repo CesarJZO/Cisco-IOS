@@ -44,8 +44,22 @@ login local
 transport input telnet
 line aux 0
 login local
-!@ Part 3: Configure Local Authentication Using AAA
 !@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
+!* Reload and restore saved configuration on R1
+reload
+!* Enaable AAA on R1
+aaa new-model
+!* Configure the default login authentication list
+aaa authentication login default group radius none
+!* Specify a RADIUS server
+radius server CCNAS
+address ipv4 192.168.1.3
+key WinRadius
+address ipv4 192.168.1.3 auth-port 1812 acct-port 1813
+!* Create an authentication method list for Telnet and test it
+aaa quthentication login TELNET_LINES group radius
+line vty 0 4
+login authentication TELNET_LINES
 
 !~~ R2 ~~!
 !@ Part 1: Configure Basic Device Settings
@@ -62,8 +76,6 @@ no shutdown
 !* Configure static routing on the routers
 ip route 192.168.1.0 255.255.255.0 s0/0/0
 ip route 192.168.3.0 255.255.255.0 s0/0/1
-!@ Part 3: Configure Local Authentication Using AAA
-!@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
 
 !~~ R3 ~~!
 !@ Part 1: Configure Basic Device Settings
