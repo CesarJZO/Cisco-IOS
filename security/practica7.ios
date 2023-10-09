@@ -83,7 +83,7 @@ ip route 192.168.3.0 255.255.255.0 s0/0/1
 hostname R3
 no ip domain-lookup
 interface g0/1
-ip address 192.168.3.1 255.255
+ip address 192.168.3.1 255.255.255.0
 no shutdown
 interface s0/0/1
 ip address 10.2.2.1 255.255.255.252
@@ -138,11 +138,13 @@ clock set 14:15:00 26 December 2014
 show run | include timestamps
 !* Save the running configuration from the privileged EXEC prompt
 copy running-config startup-config
-!@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
 
 !~~ All ~~!
 ![ ] Update OS version
 boot system flash c1900-universalk9-mz.SPA.155-3.M4a.bin
+exit
+write
+reload
 !* Save the basic running configuration for each router
 copy running-config startup-config
 ![ ] Save before Part 2
