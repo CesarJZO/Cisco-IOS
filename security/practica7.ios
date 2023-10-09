@@ -110,10 +110,27 @@ login local
 transport input telnet
 line aux 0
 login local
-!@ Part 3: Configure Local Authentication Using AAA
+!@ Part 3: Configure Local Authentication Using AAA on R3
+!* Configure the local user database
+username Admin01 privilege 15 algorithm-type scrypt secret Admin01pass
+!* Enable AAA services
+aaa new-model
+!* Implement AAA services for console acces using the local database
+aaa authentication login default local-case none
+!* Create an AAA authentication profile for Telnet using the local database
+aaa authentication login TELNET_LINES local
+line vty 0 4
+login authentication TELNET_LINES
+!* Verify that the system clock and debug timestamps are configured correctly
+clock set 14:15:00 26 December 2014
+show run | include timestamps
+!* Save the running configuration from the privileged EXEC prompt
+copy running-config startup-config
 !@ Part 4: Configure Centralized Authentication Using AAA and RADIUS
 
 !~~ All ~~!
+![ ] Update OS version
+boot system flash c1900-universalk9-mz.SPA.155-3.M4a.bin
 !* Save the basic running configuration for each router
 copy running-config startup-config
 ![ ] Save before Part 2
