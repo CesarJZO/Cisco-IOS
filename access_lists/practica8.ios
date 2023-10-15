@@ -1,12 +1,12 @@
 !~~ Tests ~~!
-S1 - webserver  !! falla
-PC1 - PC2       !* éxito
-S2 - Webserver  !! falla
-PC4 - PC1       !! falla
-PC4 - PC2       !! falla
-PC4 - PC3       !! falla
-PC6 - PC3       !* éxito
-webserver - PC3 !! falla
+! S1 - webserver  !! falla
+! PC1 - PC2       !* éxito
+! S2 - Webserver  !! falla
+! PC4 - PC1       !! falla
+! PC4 - PC2       !! falla
+! PC4 - PC3       !! falla
+! PC6 - PC3       !* éxito
+! webserver - PC3 !! falla
 PC5 - PC3       !! falla
 PC7 - PC3       !! falla
 PC8 - PC3       !* éxito
@@ -16,10 +16,45 @@ PC8 - PC3       !* éxito
 ! 64  -> 01000000
 ! 128 -> 10000000
 ! 192 -> 11000000
-! wc  -> 11000000
+! wc  == 11000000
+!@ Router 4
 ip access-list standard NO-SERVERS
 deny 201.10.10.0 0.0.0.192
 permit any
-!@ Router 4
 interface f0/0
 ip access-group NO-SERVERS in
+
+![*] Network 201.10.50.0 cannot access to 201.10.{10,20,30}.0 networks
+!@ Router 3
+ip access-list extended BLOCK_LAB
+deny ip 201.10.50.0 0.0.0.255 201.10.10.0 0.0.0.255
+deny ip 201.10.50.0 0.0.0.255 201.10.20.0 0.0.0.255
+deny ip 201.10.50.0 0.0.0.255 201.10.30.0 0.0.0.255
+permit ip any any
+interface f0/1
+ip access-group BLOCK_LAB in
+
+![ ] Network 201.10.30.0 should block any outside of 201.10.0.0
+!@ Router 5
+ip access-list extended NO_Internet
+permit ip 201.10.0.0 0.0.255.255 201.10.30.0 0.0.0.255
+deny ip any any
+interface f0/0
+ip access-group NO_Internet out
+
+![ ] Hosts .31 .63 .127 .159 .191 and .223 from 201.10.40.0, but .95 and the rest of the network can
+! 31  -> 00011111
+! 63  -> 00111111
+!? 95 -> 01011111
+! 127 -> 01111111
+! 159 -> 10011111
+! 191 -> 10111111
+! 223 -> 11011111
+! wc  == 11100000 -> 224
+!@ Router 3
+ip access-list extended NO_Internet
+permit ip host 201.10.40.95 any
+deny ip 201.10.40.0 0.0.0.224 any
+permit ip any any
+interface f0/0
+ip access-group NO_Internet in
