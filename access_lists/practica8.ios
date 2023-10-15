@@ -1,0 +1,25 @@
+!~~ Tests ~~!
+S1 - webserver  !! falla
+PC1 - PC2       !* éxito
+S2 - Webserver  !! falla
+PC4 - PC1       !! falla
+PC4 - PC2       !! falla
+PC4 - PC3       !! falla
+PC6 - PC3       !* éxito
+webserver - PC3 !! falla
+PC5 - PC3       !! falla
+PC7 - PC3       !! falla
+PC8 - PC3       !* éxito
+
+!~~ Filters ~~!
+![*] Every host in 201.10.10.0 can exit except .64 .128 and .192
+! 64  -> 01000000
+! 128 -> 10000000
+! 192 -> 11000000
+! wc  -> 11000000
+ip access-list standard NO-SERVERS
+deny 201.10.10.0 0.0.0.192
+permit any
+!@ Router 4
+interface f0/0
+ip access-group NO-SERVERS in
