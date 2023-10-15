@@ -7,9 +7,9 @@
 ! PC4 - PC3       !! falla
 ! PC6 - PC3       !* éxito
 ! webserver - PC3 !! falla
-PC5 - PC3       !! falla
-PC7 - PC3       !! falla
-PC8 - PC3       !* éxito
+! PC5 - PC3       !! falla
+! PC7 - PC3       !! falla
+! PC8 - PC3       !* éxito
 
 !~~ Filters ~~!
 ![*] Every host in 201.10.10.0 can exit except .64 .128 and .192
@@ -34,7 +34,7 @@ permit ip any any
 interface f0/1
 ip access-group BLOCK_LAB in
 
-![ ] Network 201.10.30.0 should block any outside of 201.10.0.0
+![*] Network 201.10.30.0 should block any outside of 201.10.0.0
 !@ Router 5
 ip access-list extended NO_Internet
 permit ip 201.10.0.0 0.0.255.255 201.10.30.0 0.0.0.255
@@ -42,7 +42,7 @@ deny ip any any
 interface f0/0
 ip access-group NO_Internet out
 
-![ ] Hosts .31 .63 .127 .159 .191 and .223 from 201.10.40.0, but .95 and the rest of the network can
+![*] Hosts .31 .63 .127 .159 .191 and .223 from 201.10.40.0, but .95 and the rest of the network can
 ! 31  -> 00011111
 ! 63  -> 00111111
 !? 95 -> 01011111
@@ -54,7 +54,7 @@ ip access-group NO_Internet out
 !@ Router 3
 ip access-list extended NO_Internet
 permit ip host 201.10.40.95 any
-deny ip 201.10.40.0 0.0.0.224 any
+deny ip 201.10.40.31 0.0.0.224 any
 permit ip any any
 interface f0/0
 ip access-group NO_Internet in
