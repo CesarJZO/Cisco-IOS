@@ -1,0 +1,70 @@
+!~~ Basic Router Configuration ~~!
+!* Disable DNS lookup
+!@ Router 2
+no ip domain-lookup
+
+!* Configure a user account, encrypted passwords and crypto keys for SSH
+!@ Router 1
+security passwords min-length 10
+ip domain-name domain.com
+crypto key generate rsa general-keys modulus 1024
+username admin01 algorithm-type scrypt secret cisco12345
+line console 0
+login local
+exec-timeout 5 0
+logging synchronous
+line aux 0
+login local
+transport input ssh
+exec-timeout 5 0
+enable algorithm-type scrypt secret class12345
+
+!* Save the basic running configuration for all three routers
+copy running-config startup-config
+
+!~~ Configuring a Zone-Based Policy Firewall (ZPF) ~~!
+!* Creating the security zones
+!@ Router 3
+zone security INSIDE
+zone security GUEST
+zone security INTERNET
+!* Creating Security Policies
+!@ Router 3
+class-map type inspect match-any INSIDE_PROTOCOLS
+match protocol tcp
+match protocol udp
+match protocol icmp
+class-map type inspect match-any CONFROOM_PROTOCOLS
+match protocol http
+match protocol https
+match protocol dns
+policy-map type inspect INSIDE_TO_INTERNET
+class type inspect INSIDE_PROTOCOLS
+inspect
+policy-map type inspect CONFROOM_TO_INTERNET
+class type inspect CONFROOM_PROTOCOLS
+inspect
+!* Create the Zone Pairs
+!@ Router 3
+zone-pair security INSIDE_TO_INTERNET source INSIDE destination INTERNET
+zone-pair security CONFROOM_TO_INTERNET source GUEST destination INTERNET
+!* Applying Security Policies
+!@ Router 3
+zone-pair security INSIDE_TO_INTERNET source INSIDE destination INTERNET
+service-policy type inspect INSIDE_TO_INTERNET
+zone-pair security CONFROOM_TO_INTERNET source GUEST destination INTERNET
+service-policy type inspect CONFROOM_TO_INTERNET
+!* Assign Interfaces to the Proper Security Zones
+!@ Router 3
+interface g0/0
+zone-member security GUEST
+interface g0/1
+zone-member security INSIDE
+interface s0/0/1
+zone-member security INTERNET
+
+!~~ Consults ~~!
+show interface brief
+show zone-pair security
+show policy-map type inspect zone-pair
+show zone security
