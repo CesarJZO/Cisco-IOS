@@ -1,0 +1,49 @@
+!~~ Enable IOS IPS ~~!
+!* Enable the Security Technology package
+!@ R1
+license boot module c1900 technology-package securityk9
+copy running-config startup-config
+show version
+!* Create an IOS IPS configuration in flash
+mkdir flash:ipsdir
+!* Configure the IPS signature storage location
+ip ips config location flash:ipsdir
+!* Create an IPS rule
+ip ips name iosips
+!* Enable logging
+! Enable syslog if it is not enabled
+ip ips notify log
+! If necessary, use the clock set command from privileged EXEC mode to reset the clock
+clock set 19:00:00 15 October 2023
+! Verify that the timestamp service for logging is enabled on the router using the show run command. Enable the timestamp service if it is not enabled.
+service timestamps log datetime msec
+! Send log messages to the syslog server at IP address 192.168.1.50
+logging host 192.168.1.50
+!* Configure IOS IPS to use the signature categories
+ip ips signature-category
+category all
+retired true
+exit
+category ios_ips basic
+retired false
+exit
+exit
+!* Apply the IPS rule to an interface
+interface g0/1
+ip ips iosips out
+
+!~~ Modify the signature ~~!
+!@ R1
+!* Change the event-action of a signature
+ip ips signature-definition
+signature 2004 0
+status
+retired false
+enabled true
+exit
+engine
+event-action produce-alert
+event-action deny-packet-inline
+exit
+exit
+exit
