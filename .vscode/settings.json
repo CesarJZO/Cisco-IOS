@@ -1,4 +1,5 @@
 {
+    "workbench.colorTheme": "GitHub Dark Default",
     "editor.tabCompletion": "onlySnippets",
     "editor.wordBasedSuggestions": false,
     "cSpell.enabledLanguageIds": [

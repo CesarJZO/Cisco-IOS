@@ -1,0 +1,37 @@
+!~~ Switch basic port configuration ~~!
+
+!* Turn on the interfaces
+interface range f0/1 - 3
+no shutdown
+
+!* Configure port security on f0/2 and f0/3
+! Set ports as access ports
+interface range f0/2 - 3
+switchport mode access
+! Enable port security
+switchport port-security
+! Set the maximum number of MAC addresses to 1
+switchport port-security maximum 1
+! On f0/2 set MAC address manually from PC-A
+interface f0/2
+switchport port-security mac-address 0000.0000.0001
+! On f0/3 set MAC address dynamically
+interface f0/3
+switchport port-security mac-address sticky
+! In case of violation, shutdown the port
+interface range f0/2 - 3
+switchport port-security violation shutdown
+! Set inactivity timer to 60 seconds
+switchport port-security aging time 60
+! Shutdown unused ports
+interface range f0/4 - 24
+shutdown
+
+!* Test port security
+! 1. Ping from PC-A to PC-B and PC-C, then PC-B to PC-C. All should work.
+! 2. Connect f0/2 at S1 to PC-X. Ping to any other PC. What happens?
+!! should fail.
+! 3. Connect f0/3 at S1 to PC-X. Ping to PC-C. What happens?
+! 4. Reset connections.
+! 5. Setup the interfaces again. Which commands are needed?
+switchport port-security mac-address sticky
