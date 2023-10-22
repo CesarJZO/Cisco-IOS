@@ -14,7 +14,7 @@ switchport port-security
 switchport port-security maximum 1
 ! On f0/2 set MAC address manually from PC-A
 interface f0/2
-switchport port-security mac-address 0000.0000.0001
+switchport port-security mac-address 0001.6489.4D60
 ! On f0/3 set MAC address dynamically
 interface f0/3
 switchport port-security mac-address sticky
@@ -28,10 +28,13 @@ interface range f0/4 - 24
 shutdown
 
 !* Test port security
-! 1. Ping from PC-A to PC-B and PC-C, then PC-B to PC-C. All should work.
+! 1. Ping from PC-A to PC-B and PC-C, then PC-B to PC-C. All should work. !* Passed
 ! 2. Connect f0/2 at S1 to PC-X. Ping to any other PC. What happens?
 !! should fail.
 ! 3. Connect f0/3 at S1 to PC-X. Ping to PC-C. What happens?
 ! 4. Reset connections.
 ! 5. Setup the interfaces again. Which commands are needed?
 switchport port-security mac-address sticky
+
+!* Consult MAC address table
+show mac address-table
