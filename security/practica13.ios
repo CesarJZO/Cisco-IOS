@@ -1,0 +1,228 @@
+!~~ Basic config ~~!
+!@ R1
+interface g0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+
+!~~ Part 1: Configure Basic Switch Settings ~~!
+!* Configure basic settings for the router and each switch.
+!@ S1
+interface vlan 1
+ip address 192.168.1.2 255.255.255.0
+no shutdown
+! Disable DNS lookup to prevent the router from attempting to translate incorrectly entered commands as though they were hostnames.
+no ip domain-lookup
+! Configure enable password
+enable secret 5 cisco12345
+! Configure console password
+line console 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+![ ] Ping from PC-A and PC-B to the R1 F0/1 interface at 192.168.1.1
+!* Save the basic configurations for the router and both switches.
+copy running-config startup-config
+
+!~~ Part 2: Configure SSH Access to the Switches ~~!
+!* Configure the SSH Server on S1 and S2 Using the CLI.
+!@ S1/S2
+! Configure a domain name.
+ip domain-name ccnasecurity.com
+! Configure a privileged user for login from the SSH client.
+username admin privilege 15 secret cisco12345
+! Generate the RSA encryption key pair for the router.
+crypto key generate rsa general-keys modulus 1024
+! Configure SSH version 2.
+ip ssh version 2
+! Configure SSH timeouts and authentication parameters.
+ip ssh time-out 90
+ip ssh authentication-retries 2
+! Configure the incoming vty lines.
+line vty 0 4
+privilege level 15
+exec-timeout 5 0
+login local
+transport input ssh
+exit
+line vty 5 15
+transport input none
+
+!~~ Part 3: Configure Secure Trunks and Access Ports ~~!
+!* Secure Trunk Ports.
+!@ S1 as root switch
+! Set S1 priority to 0 so that it becomes the root switch.
+spanning-tree vlan 1 priority 0
+! Configure trunk ports on S1 and S1.
+!@ S1/S2
+interface f0/1
+switchport mode trunk
+! Verify that the trunk ports are configured correctly.
+show interfaces trunk
+! Change the native VLAN for the trunk ports on S1 and S2.
+!@ S1/S2
+interface f0/1
+switchport trunk native vlan 99
+! Prevent the use of DTP on S1 and S2.
+!@ S1/S2
+interface f0/1
+switchport nonegotiate
+! Verify the configuration with the show run command.
+show run | begin f0/1
+!* Secure Access Ports.
+! Disable trunking on S1 access ports.
+!@ S1
+interface range f0/5-6
+switchport mode access
+! Disable trunking on S2 access ports.
+!@ S2
+interface range f0/18
+switchport mode access
+!* Protect AAgainst STP Attacks.
+!@ S1
+! Enable PortFast on the S1 Fa0/5 and Fa0/6 access ports.
+interface range f0/5-6
+spanning-tree portfast
+!@ S2
+interface f0/18
+spanning-tree portfast
+! Enable BPDU guard on the S1 and S2 access ports.
+!@ S1
+interface f0/6
+spanning-tree bpduguard enable
+!@ S2
+interface f0/18
+spanning-tree bpduguard enable
+! Verify that BPDU guard is configured by using the show spanning-tree interface f0/6 detail command on S1.
+show spanning-tree interface f0/6 detail
+! Enable root guard.
+!@ S2
+interface g0/1
+spanning-tree guard root
+! Verify that root guard is configured.
+show run | begin g0/1
+! If a port is in the root-inconsistent state, it means that the port is receiving superior BPDUs from another switch. The port is moved to the root-inconsistent state and is blocked.
+show spanning-tree inconsistentports
+!* Configure Port Security and Disable Unused Ports.
+! Record the R1 Fa0/0 MAC address.
+!@ R1
+show interfaces f0/0
+![ ] Copy the mac address
+! Configure basic port security.
+!@ S1
+interface f0/5
+shutdown
+switchport port-security
+switchport port-security mac-address ![ ] paste mac address
+no shutdown
+![ ] ping 192.168.1.10 from R1 CLI
+!@ R1
+! Violate security by changing the MAC address.
+interface g0/1
+mac-address aaaa.bbbb.cccc
+![ ] Ping from R1 CLI to PC-A. Was it successful?
+! Remove the hard-coded MAC address from the router and re-enable the Fast Ethernet 0/1 interface.
+interface g0/1
+no mac-address aaaa.bbbb.cccc
+![ ] From R1, try to ping the PC-A again at 192.168.1.10. Was the ping successful? Why or why not?
+! Clear error disable status
+!@ S1
+interface f0/5
+shutdown
+no shutdown
+![ ] Ping from R1 to 192.168.1.10
+! Configure port security for VoIP.
+!@ S2
+interface f0/18
+switchport mode access
+switchport port-security
+switchport port-security maximum 3
+switchport port-security violation shutdown
+switchport port-security aging time 120
+! Disable unused ports on S1 and S2
+!@ S1
+interface range f0/2-4
+shutdown
+interface range f0/7-24
+shutdown
+interface range g0/1-2
+shutdown
+!@ S2
+interface range f0/2-17, f0/19-24, g0/1-2
+shutdown
+! Move active ports to a VLAN other than the default VLAN 1.
+!@ S1/S2
+vlan 20
+name Users
+!@ S1
+interface f0/6
+switchport access vlan 20
+!@ S2
+interface f0/18
+switchport access vlan 20
+! Configure a port with the PVLAN Edge feature.
+!@ S1
+interface f0/6
+switchport protected
+intercace f0/7
+switchport protected
+no shutdown
+end
+! Verify that the PVLAN Edge Feature (protected port) is enabled on Fa0/6.
+show interfaces f0/6 switchport
+
+!~~ Configure DHCP Snooping ~~!
+!* Set Up DHCP.
+! Set up DHCP on R1 for VLAN 1.
+!@ R1
+ip dhcp pool CCNAS
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+ip dhcp excluded-address 192.168.1.1 192.168.1.4
+! Set up DHCP on R1 for VLAN 20.
+!@ R1
+ip dhcp pool 20Users
+network 192.168.20.0 255.255.255.0
+default-router 192.168.20.1
+ip dhcp excluded-address 192.168.20.1
+!* Configure Inter-VLAN Communication.
+! Configure subinterfaces on R1.
+!@ R1
+interface g0/1
+shutdown
+no ip address 192.168.1.1 255.255.255.0
+no shutdown
+interface g0/1.1
+encapsulation dot1q 1
+ip address 192.168.1.1 255.255.255.0
+interface g0/1.20
+encapsulation dot1q 20
+ip address 192.168.20.1 255.255.255.0
+interface g0/1.99
+encapsulation dot1q 99
+ip address 192.168.99.1 255.255.255.0
+! Configure S1 interface f0/5 as a trunk port.
+!@ S1
+interface f0/5
+switchport mode trunk
+switchport trunk native vlan 99
+![ ] Configure PC-A and PC-B to obtain an IP Address using DHCP.
+!* Configure DHCP Snooping.
+! Enable DHCP snooping globally.
+!@ S1
+ip dhcp snooping
+ip dhcp snooping information option
+! Enable DHCP snooping for VLAN 1 and 20.
+ip dhcp snooping vlan 1,20
+! Limit the number of DHCP requests on an interface.
+!@ S1
+interface f0/6
+ip dhcp snooping limit rate 10
+exit
+! Identify the trusted interface(s). DHCP responses are only permitted through trusted ports.
+!@ S1
+interface f0/5
+description connects to DHCP server
+ip dhcp snooping trust
+! Verify DHCP snooping configuration.
+show ip dhcp snooping
