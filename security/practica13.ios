@@ -20,7 +20,7 @@ password ciscoconpass
 exec-timeout 5 0
 login
 logging synchronous
-![ ] Ping from PC-A and PC-B to the R1 F0/1 interface at 192.168.1.1
+![*] Ping from PC-A and PC-B to the R1 F0/1 interface at 192.168.1.1
 !* Save the basic configurations for the router and both switches.
 copy running-config startup-config
 
@@ -106,31 +106,31 @@ show spanning-tree inconsistentports
 !* Configure Port Security and Disable Unused Ports.
 ! Record the R1 Fa0/0 MAC address.
 !@ R1
-show interfaces f0/0
-![ ] Copy the mac address
+show interfaces g0/1
+![*] Copy the mac address
 ! Configure basic port security.
 !@ S1
 interface f0/5
 shutdown
 switchport port-security
-switchport port-security mac-address ![ ] paste mac address
+switchport port-security mac-address 0060.70c5.ac02
 no shutdown
-![ ] ping 192.168.1.10 from R1 CLI
+![*] ping 192.168.1.10 from R1 CLI
 !@ R1
 ! Violate security by changing the MAC address.
 interface g0/1
 mac-address aaaa.bbbb.cccc
-![ ] Ping from R1 CLI to PC-A. Was it successful?
+![*] Ping from R1 CLI to PC-A. Was it successful?
 ! Remove the hard-coded MAC address from the router and re-enable the Fast Ethernet 0/1 interface.
 interface g0/1
 no mac-address aaaa.bbbb.cccc
-![ ] From R1, try to ping the PC-A again at 192.168.1.10. Was the ping successful? Why or why not?
+![*] From R1, try to ping the PC-A again at 192.168.1.10. Was the ping successful? Why or why not?
 ! Clear error disable status
 !@ S1
 interface f0/5
 shutdown
 no shutdown
-![ ] Ping from R1 to 192.168.1.10
+![*] Ping from R1 to 192.168.1.10
 ! Configure port security for VoIP.
 !@ S2
 interface f0/18
@@ -164,7 +164,7 @@ switchport access vlan 20
 !@ S1
 interface f0/6
 switchport protected
-intercace f0/7
+interface f0/7
 switchport protected
 no shutdown
 end
