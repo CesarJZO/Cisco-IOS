@@ -1,0 +1,98 @@
+!~~ Basic configuration ~~!
+!@ R1
+hostname R1
+interface g0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+interface s0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+!@ R2
+hostname R2
+interface g0/0
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+interface s0/0/0
+ip address 10.1.1.1 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 10.2.2.1 mm30
+no shutdown
+!@ R3
+hostname R3
+interface g0/0
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+interface s0/0/1
+ip address 10.2.2.2 255.255.255.252
+no shutdown
+
+!~~ Part 1: Configure IPsec Parameters on R1 ~~!
+!* Enable the Security Technology package.
+!@ R1(config)#
+license boot module c1900 technology-package securityk9
+yes
+end
+reload
+!@ R1#
+write
+!* Identify interesting traffic on R1.
+!@ R1(config)#
+access-list 110 permit ip 192.168.1.0 0.0.0.255 192.168.3.0 0.0.0.255
+!* Configure the IKE Phase 1 ISAKMP policy on R1.
+!@ R1(config)#
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share
+group 5
+exit
+crypto isakmp key vpnpa55 address 10.2.2.2
+!* Configure the IKE Phase 2 IPsec policy on R1.
+!@ R1(config)#
+! Create the transform-set VPN-SET to use esp-aes and esp-sha-hmac.
+crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac
+! Create the crypto map VPN-MAP that binds all of the Phase 2 parameters together. Use sequence number 10 and identify it as an ipsec-isakmp map.
+crypto map VPN-MAP 10 ipsec-isakmp
+description VPN connection to R3
+set peer 10.2.2.2
+set transform-set VPN-SET
+match address 110
+exit
+!* Configure the crypto map on the outgoing interface.
+!@ R1(config)#
+interface s0/0/0
+crypto map VPN-MAP
+
+!~~ Part 2: Configure IPsec Parameters on R3 ~~!
+!* Enable the Security Technology package.
+!@ R3(config)#
+license boot module c1900 technology-package securityk9
+yes
+end
+!@ R3#
+write
+reload
+!* Configure router R3 to support a site-to-site VPN with R1.
+!@ R3(config)#
+access-list 110 permit ip 192.168.3.0 0.0.0.255 192.168.1.0 0.0.0.255
+!* Configure the IKE Phase 1 ISAKMP properties on R3.
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share
+group 5
+exit
+crypto isakmp key vpnpa55 address 10.1.1.2
+!* Configure the IKE Phase 2 IPsec policy on R3.
+! Create the transform-set VPN-SET to use esp-aes and esp-sha-hmac.
+!@ R3(config)#
+crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac
+! Create the crypto map VPN-MAP that binds all of the Phase 2 parameters together. Use sequence number 10 and identify it as an ipsec-isakmp map.
+crypto map VPN-MAP 10 ipsec-isakmp
+description VPN connection to R1
+set peer 10.1.1.2
+set transform-set VPN-SET
+match address 110
+exit
+!* Configure the crypto map on the outgoing interface.
+interface s0/0/1
+crypto map VPN-MAP
