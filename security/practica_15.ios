@@ -96,3 +96,6 @@ exit
 !* Configure the crypto map on the outgoing interface.
 interface s0/0/1
 crypto map VPN-MAP
+
+!~~ Verify the IPsec VPN ~~!
+show crypto ipsec sap
