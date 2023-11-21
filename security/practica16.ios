@@ -1,0 +1,117 @@
+!~~ Configure Basic Device Settings ~~!
+!@ R1/R2/R3
+!* Configure and encrypt passwords.
+! Set minimum password length to 10 characters.
+security passwords min-length 10
+! Configure the enable secret password using 9 SCRYPT algorithm.
+enable algorithm-type scrypt secret cisco12345
+! Create local user with password using 9 SCRYPT algorithm.
+username admin01 algorithm-type scrypt secret admin01pass
+!* Configure the console line.
+line console 0
+login local
+exec-timeout 5 0
+logging synchronous
+!* Configure SSH Server.
+! Configure a domain name
+ip domain-name ccnasecurity.com
+! Generate RSA keys
+crypto key generate rsa modulus 1024
+! Issue the command to enable SSH version 2
+ip ssh version 2
+! Configure the VTY lines
+!@ R1/R3
+line vty 0 4
+login local
+exec-timeout 5 0
+logging synchronous
+transport input ssh
+!* Save the basic running configuration for all three routers.
+copy running-config startup-config
+
+!~~ Configure a Site-to-Site VPN with CiscoIOS ~~!
+!* Configure IPsec VPN Settings.
+![ ] Verify connectivity from the R1 LAN to the R3 LAN.
+!@ PC-A:\>
+ping 192.168.3.3
+!* Enable IKE policies on R1 and R3.
+!@ R1/R3
+crypto isakmp enable
+!* Configure the IKE Phase 1 ISAKMP policy on R1 and R3.Configure the IKE Phase 1 ISAKMP policy on R1 and R3.
+!@ R1/R3
+crypto isakmp policy 10
+hash sha
+authentication pre-share
+group 5
+lifetime 3600
+encryption aes 256
+end
+! Verify the IKE policy with the show crypto isakmp policy command.
+!@ R1
+show crypto isakmp policy
+!* Configure pre-shared keys.
+!@ R1
+crypto isakmp key cisco123 address 10.2.2.1
+!@ R3
+crypto isakmp key cisco123 address 10.1.1.1
+!* Configure the IPsec transform srt and lifetime.
+!@ R1/R3
+crypto ipsec transform-set 50 esp-aes 256 esp-sha-hmac
+exit
+crypto ipsec security-association lifetime seconds 1800
+!* Define interesting traffic.
+!@ R1
+access-list 101 permit ip 192.168.1.0 0.0.0.255 192.168.3.0 0.0.0.255
+!@ R3
+access-list 101 permit ip 192.168.3.0 0.0.0.255 192.168.1.0 0.0.0.255
+!* Create and apply a crypto map.
+!@ R1
+crypto map 50 50 ipsec-isakmp
+match address 101
+set peer 10.2.2.1
+set pfs group14
+set transform-set 50
+set security-association lifetime seconds 900
+exit
+!@ R3
+crypto map CMAP 10 ipsec-isakmp
+match address 101
+set peer 10.1.1.1
+set pfs group14
+set transform-set 50
+set security-association lifetime seconds 900
+exit
+! Apply the crypto map to the interfaces.
+!@ R1
+interface S0/0/0
+!! Si no jala: crypto map 50
+crypto map CMAP
+end
+!@ R3
+interface S0/0/1
+crypto map CMAP
+end
+!* Verify the Site-to-Site IPsec VPN Configuration.
+! Verify the IPsec configuration on R1 and R3.
+!@ R1/R3
+show crypto ipsec transform-set
+show crypto map
+!* Verify the IPsec VPN Operation.
+! Display ISAKMP security associations.
+show crypto isakmp sa
+! Display IPsec security associations.
+show crypto ipsec sa
+!* Generate some uninteresting test traffic and observe the results.
+![ ] Ping from R1 to R3 s0/0/0 (Should be successful): ping 10.2.2.1
+show crypto ipsec sa
+![ ] Ping from R1 to R3 g0/1 (Should be successful): ping 192.168.3.1
+!@ R1
+debug ip ospf hello
+! Turn off debugging
+no debug ip ospf hello
+! or
+undebug all
+!* Generate some interesting test traffic and observe the results.
+!@ R1
+![ ] Go to Step 4
+
