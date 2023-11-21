@@ -1,12 +1,14 @@
+boot system flash c1900-universalk9-mz.SPA.155-3.M4a.bin
+
 !~~ Configure Basic Device Settings ~~!
 !@ R1/R2/R3
 !* Configure and encrypt passwords.
 ! Set minimum password length to 10 characters.
 security passwords min-length 10
 ! Configure the enable secret password using 9 SCRYPT algorithm.
-enable algorithm-type scrypt secret cisco12345
+enable secret algorithm-type scrypt secret cisco12345
 ! Create local user with password using 9 SCRYPT algorithm.
-username admin01 algorithm-type scrypt secret admin01pass
+username admin01 password algorithm-type scrypt secret admin01pass
 !* Configure the console line.
 line console 0
 login local
@@ -16,7 +18,8 @@ logging synchronous
 ! Configure a domain name
 ip domain-name ccnasecurity.com
 ! Generate RSA keys
-crypto key generate rsa modulus 1024
+crypto key generate rsa
+1024
 ! Issue the command to enable SSH version 2
 ip ssh version 2
 ! Configure the VTY lines
@@ -31,7 +34,7 @@ copy running-config startup-config
 
 !~~ Configure a Site-to-Site VPN with CiscoIOS ~~!
 !* Configure IPsec VPN Settings.
-![ ] Verify connectivity from the R1 LAN to the R3 LAN.
+![*] Verify connectivity from the R1 LAN to the R3 LAN.
 !@ PC-A:\>
 ping 192.168.3.3
 !* Enable IKE policies on R1 and R3.
@@ -57,7 +60,6 @@ crypto isakmp key cisco123 address 10.1.1.1
 !* Configure the IPsec transform srt and lifetime.
 !@ R1/R3
 crypto ipsec transform-set 50 esp-aes 256 esp-sha-hmac
-exit
 crypto ipsec security-association lifetime seconds 1800
 !* Define interesting traffic.
 !@ R1
@@ -69,7 +71,7 @@ access-list 101 permit ip 192.168.3.0 0.0.0.255 192.168.1.0 0.0.0.255
 crypto map 50 50 ipsec-isakmp
 match address 101
 set peer 10.2.2.1
-set pfs group14
+set pfs group1
 set transform-set 50
 set security-association lifetime seconds 900
 exit
@@ -77,19 +79,18 @@ exit
 crypto map CMAP 10 ipsec-isakmp
 match address 101
 set peer 10.1.1.1
-set pfs group14
+set pfs group1
 set transform-set 50
 set security-association lifetime seconds 900
 exit
 ! Apply the crypto map to the interfaces.
 !@ R1
 interface S0/0/0
-!! Si no jala: crypto map 50
-crypto map CMAP
+crypto map 50
 end
 !@ R3
 interface S0/0/1
-crypto map CMAP
+crypto map 50
 end
 !* Verify the Site-to-Site IPsec VPN Configuration.
 ! Verify the IPsec configuration on R1 and R3.
@@ -102,9 +103,9 @@ show crypto isakmp sa
 ! Display IPsec security associations.
 show crypto ipsec sa
 !* Generate some uninteresting test traffic and observe the results.
-![ ] Ping from R1 to R3 s0/0/0 (Should be successful): ping 10.2.2.1
+![*] Ping from R1 to R3 s0/0/0 (Should be successful): ping 10.2.2.1
 show crypto ipsec sa
-![ ] Ping from R1 to R3 g0/1 (Should be successful): ping 192.168.3.1
+![*] Ping from R1 to R3 g0/1 (Should be successful): ping 192.168.3.1
 !@ R1
 debug ip ospf hello
 ! Turn off debugging
