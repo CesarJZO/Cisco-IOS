@@ -1,0 +1,90 @@
+!~~ Parte 1: Configurar los parámetros básicos de dispositivos ~~!
+!* Paso 1: configurar los parámetros básicos para cada router.
+!@ WEST/EAST/ISP(config)#
+! Desactive la búsqueda de DNS.
+no ip domain-lookup
+! Configure los nombres de los dispositivos.
+hostname WEST
+! Habilite el servicio de encriptación de passwords
+service password-encryption
+! Cree un aviso de mensaje del día (MOTD) que advierta a los usuarios que se prohíbe el acceso no autorizado.
+banner motd #Prohibido el acceso al personal no autorizado ¡#
+! Asigne class como la contraseña cifrada del modo EXEC privilegiado. Utilizando enable secret.
+enable secret class
+!@ WEST(config)#
+! Aplique las direcciones IP a las interfaces físicas.
+interface g0/1
+ip address 172.16.1.1 255.255.255.0
+no shutdown
+interface s0/0/0
+ip address 10.1.1.1 255.255.255.252
+no shutdown
+!@ EAST(config)#
+! Aplique las direcciones IP a las interfaces físicas.
+interface g0/1
+ip address 172.16.2.1 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+!@ ISP(config)#
+! Aplique las direcciones IP a las interfaces físicas.
+interface s0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 10.2.2.2 255.255.255.252
+no shutdown
+
+!* Paso 2: Configurar las rutas predeterminadas al router ISP.
+!@ WEST(config)#
+ip route 0.0.0.0 0.0.0.0 10.1.1.2
+!@ EAST(config)#
+ip route 0.0.0.0 0.0.0.0 10.2.2.2
+!* Paso 4: Guardar la configuración en ejecución.
+copy running-config startup-config
+
+!~~ Parte 2: Configurar un túnel GRE ~~!
+!* Paso 1: Configurar la interfaz de túnel GRE.
+!@ WEST(config)#
+interface tunnel 0
+ip address 172.16.12.1 255.255.255.252
+tunnel source s0/0/0
+tunnel destination 10.2.2.1
+!@ EAST(config)#
+interface tunnel 0
+ip address 172.16.12.2 255.255.255.252
+tunnel source s0/0/1
+tunnel destination 10.1.1.1
+!* Paso 2: Verificar que el túnel GRE funcione.
+!@ WEST/EAST#
+show ip interface brief
+!@ WEST#
+ping 172.16.12.2
+![ ] ¿Cuál es la ruta al router EAST?
+traceroute
+![ ] ¿Cuál es la ruta al router WEST desde el router EAST?
+![ ] ¿A qué interfaces se asocian estas direcciones IP? ¿Por qué?
+ping 
+![ ] Los comandos ping y traceroute deberían realizarse correctamente. De lo contrario, lleve a cabo la resolución de problemas antes de continuar con la parte siguiente.
+
+!~~ Parte 3: Habilitar el routing por el túnel GRE ~~!
+!* Paso 1: Configurar el routing OSPF para el área 0 a través del túnel.
+!@ WEST(config)#
+router ospf 1
+network 172.16.1.0 0.0.0.255 area 0
+network 172.16.12.0 0.0.0.3 area 0
+!@ EAST(config)#
+router ospf 1
+network 172.16.2.0 0.0.0.255 area 0
+network 172.16.12.0 0.0.0.3 area 0
+!* Paso 2: Verificar el enrutamiento OSPF.
+!@ WEST#
+show ip route
+![ ] ¿Cuál es la interfaz de salida y la dirección IP para llegar a la red 172.16.2.0/24?
+![ ] ¿Cuál es la interfaz de salida y la dirección IP para llegar a la red 172.16.1.0/24?
+!* Paso 3: Verificar la conectividad de extremo a extremo.
+![ ] Haga ping de la PC-A a la PC-C. Esto debe tener éxito. De lo contrario, lleve a cabo la resolución de problemas hasta que haya conectividad de extremo a extremo.
+!@ PC-A>
+ping 172.16.2.3
+![ ] ¿Cuál es la ruta desde la PC-A hasta la PC-C?
