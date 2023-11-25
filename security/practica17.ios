@@ -1,0 +1,104 @@
+!~~ Part 2: Configure ASA Settings and Interface Security Using the CLI ~~!
+!* Step 1: Configure the hostname and domain name.
+!@ CCNAS-ASA(config)#
+hostname CCNAS-ASA
+domain-name ccnasecurity.com
+!* Step 2: Configure the enable mode password.
+!@ CCNAS-ASA(config)#
+enable password ciscoenpa55
+!* Step 3: Set the date and time.
+!@ CCNAS-ASA(config)#
+clock set 12:00:00 24 November 2023
+!* Step 4: Configure the inside and outside interfaces.
+! Configure a logical VLAN 1 interface for the inside network
+!@ CCNAS-ASA(config)#
+interface vlan 1
+nameif inside
+ip address 192.168.1.1 255.255.255.0
+security-level 100
+! Create a logical VLAN 2 interface for the outside network
+!@ CCNAS-ASA(config)#
+interface vlan 2
+nameif outside
+ip address 209.165.200.226 255.255.255.248
+security-level 0
+! Use the following verification commands to check your configurations:
+show interface ip brief
+show ip address
+show switch vlan
+!* Test connectivity to the ASA.
+![ ] You should be able to ping from PC-B to the ASA inside interface address (192.168.1.1). If the pings fail, troubleshoot the configuration as necessary.
+![ ] From PC-B, ping the VLAN 2 (outside) interface at IP address 209.165.200.226. You should not be able to ping this address.
+
+!~~ Part 3: Configure Routing, Address Translation, and Inspection Policy Using the CLI ~~!
+!* Step 1: Configure a static default route for the ASA.
+!@ CCNAS-ASA(config)#
+route outside 0.0.0.0 0.0.0.0 209.165.200.225
+![ ] Verify that the ASA can ping the R1 S0/0/0 IP address 10.1.1.1. If the ping is unsuccessful, troubleshoot as necessary.
+!* Step 2: Configure address translation using PAT and network objects.
+!@ CCNAS-ASA(config)#
+object network inside-net
+subnet 192.168.1.0 255.255.255.0
+nat (inside,outside) dynamic interface
+end
+!* Step 3: Modify the default MPF application inspection global service policy.
+!@ CCNAS-ASA(config)#
+class-map inspection_default
+match default-inspection-traffic
+exit
+policy-map global_policy
+class inspection_default
+inspect icmp
+exit
+service-policy global_policy global
+![ ] From PC-B, attempt to ping the R1 G0/0 interface at IP address 209.165.200.225. The pings should be successful this time .
+
+!~~ Part 4: Configure DHCP, AAA, and SSH. ~~!
+!* Step 1: Configure the ASA as a DHCP server.
+dhcpd address 192.168.1.5-192.168.1.36 inside
+dhcpd dns 209.165.201.2 interface inside
+dhcpd enable inside
+![ ] Change PC-B from a static IP address to a DHCP client, and verify that it receives IP addressing information.
+!* Step 2: Configure AAA to use the local database for authentication.
+username admin password adminpa55
+aaa authentication ssh console LOCAL
+!* Step 3: Configure remote access to the ASA.
+crypto key generate rsa modulus 1024
+no
+! Configure the ASA to allow SSH connections from any host on the inside network.
+ssh 192.168.1.0 255.255.255.0 inside
+ssh 172.16.3.3 255.255.255.255 outside
+ssh timeout 10
+![ ] Establish an SSH session from PC-C to the ASA (209.165.200.226). Troubleshoot if it is not successful.
+!@ PC-C>
+ssh -l admin 209.165.200.226
+![ ] Establish an SSH session from PC-B to the ASA (192.168.1.1). Troubleshoot if it is not successful.
+!@ PC-B>
+ssh -l admin 192.168.1.1
+
+!~~ Part 5: Configure a DMZ, Static NAT, and ACLs ~~!
+!* Step 1: Configure the DMZ interface VLAN 3 on the ASA.
+!@ CCNAS-ASA(config)#
+interface vlan 3
+ip address 192.168.2.1 255.255.255.0
+no forward interface vlan 1
+nameif dmz
+security-level 70
+! Assign ASA physical interface E0/2 to DMZ VLAN 3 and enable the interface.
+interface e0/2
+switchport access vlan 3
+! Use the following verification commands to check your configurations:
+show interface ip brief
+show ip address
+show switch vlan
+!* Step 2: Configure static NAT to the DMZ server using a network object.
+!@ CCNAS-ASA(config)#
+object network dmz-server
+host 192.168.2.3
+nat (dmz,outside) static 209.165.200.227
+exit
+!* Step 3: Configure an ACL to allow access to the DMZ server from the Internet.
+!@ CCNAS-ASA(config)#
+access-list OUTSIDE-DMZ permit icmp any host 192.168.2.3
+access-list OUTSIDE-DMZ permit tcp any host 192.168.2.3 eq 80
+access-group OUTSIDE-DMZ in interface outside
