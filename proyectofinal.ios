@@ -1,0 +1,312 @@
+!~~ Basic router configuration ~~!
+!@ R1
+interface g0/0
+ip address 209.165.200.233 255.255.255.248
+no shutdown
+interface s0/0/0
+ip address 10.10.10.1 255.255.255.252
+no shutdown
+interface loopback 1
+ip address 172.20.1.1 255.255.255.252
+no shutdown
+!@ R2
+interface s0/0/0
+ip address 10.10.10.2 255.255.255.252
+no shutdown
+interface s0/0/1
+ip address 10.20.20.2 255.255.255.252
+no shutdown
+!@ R3
+interface g0/1
+ip address 172.30.3.1 255.255.255.0
+no shutdown
+interface s0/0/1
+ip address 10.20.20.1 255.255.255.252
+no shutdown
+!@ S1: VLAN 1
+interface vlan 1
+ip address 192.168.10.11 255.255.255.0
+no shutdown
+ip default-gateway 192.168.10.1
+!@ S2: VLAN 1
+interface vlan 1
+ip address 192.168.10.12 255.255.255.0
+no shutdown
+ip default-gateway 192.168.10.1
+!@ S3: VLAN 1
+interface vlan 1
+ip address 172.30.3.11 255.255.255.0
+no shutdown
+ip default-gateway 172.30.3.1
+!@ ASA: VLAN 1
+interface vlan 1
+ip address 192.168.10.1 255.255.255.0
+no shutdown
+!@ ASA: VLAN 2
+interface vlan 2
+ip address 209.165.200.234 255.255.255.248
+no shutdown
+
+!~~ Configure Basic Router Security ~~!
+!@ R1
+enable
+configure terminal
+! Minimum password length is 10 characters.
+security passwords min-length 10
+! Encrypt plaintet passwords.
+service password-encryption
+! Privileged EXEC mode secret password is ciscoenapa55.
+enable secret ciscoenapa55
+! Console line password is ciscoconpa55, timeout is 15 minutes, and console messages should not interrupt command entry.
+line console 0
+password ciscoconpa55
+exec-timeout 15
+logging synchronous
+exit
+! A message-of-the-day (MOTD) banner should include the word unauthorized.
+banner motd "unauthorized"
+
+!@ R2
+enable
+configure terminal
+! Privileged EXEC mode secret password is ciscoenapa55.
+enable secret ciscoenapa55
+! Password for the VTY lines is ciscovtypa55, timeout is 15 minutes, and login is required.
+line vty 0 4
+password ciscovtypa55
+login
+exec-timeout 15
+
+!~~ Basic configuration Switch security ~~!
+!@ S1
+enable
+configure terminal
+! Encrypt plaintext passwords.
+service password-encryption
+! Privileged EXEC mode secret password is ciscoenapa55.
+enable secret ciscoenapa55
+! Console line password is ciscoconpa55, timeout is 5 minutes, and consoles messages should not interrupt command entry.
+line console 0
+password ciscoconpa55
+exec-timeout 5
+logging synchronous
+exit
+! Password for the VTY lines is ciscovtypa55, timeout is 5 minutes, and login is required.
+line vty 0 4
+password ciscovtypa55
+exec-timeout 5
+logging synchronous
+exit
+! An MOTD banner should include the word unauthorized.
+banner motd "unauthorized"
+! Configure trunking between S1 and S2 with the following settings:
+! Set the mode to trunk and assign VLAN 99 as the native VLAN.
+
+interface FastEthernet 0/1
+switchport mode trunk
+switchport trunk native vlan 99
+switchport nonegotiate
+! Disable the generation of DTP frames.
+exit
+interface fa0/10
+shutdown
+exit
+interface fastEthernet 0/6
+spanning-tree bpduguard enable
+spanning-tree portfast
+switchport port-security
+switchport port-security maximum 5
+switchport port-security MAC-address sticky
+switchport port-security violation shutdown
+exit
+!@ S2
+enable
+configure terminal
+interface FastEthernet 0/1
+switchport mode trunk
+switchport trunk native vlan 99
+switchport nonegotiate
+end
+
+!~~ Configure AAA Local Aunthentication ~~!
+! Create a local user account of Admin01, a secret password of Admin01pa55, and a privilege level of 15.
+!@ R1
+enable
+configure terminal
+username Admin01 privilege 15 secret Admin01pa55 
+! Enable AAA services.
+aaa new-model
+! Implement AAA services using the local database as the first option and then the enable password as the backup option.
+aaa authentication login default local enable
+
+!~~ Configure SSH ~~!
+!@ R1
+enable
+configure terminal
+! The domain name is ccnasecurity.com
+ip domain-name ccnasecurity.com
+! The RSA key should be generated with 1024 modulus bits.
+crypto key generate rsa modulus 1024
+! Only SSH version 2 is allowed.
+ip ssh version 2
+! Only SSH is allowed on VTY lines.
+line vty 0 4
+transport input ssh
+login local
+
+!~~ Secure against login attacks ~~!
+!@ R1
+! If a user fails to log in twice within a 30-second time span, disable logins for one minute.
+login block-for 1 attempts 2 within 30
+! Log at failed login attempts.
+login on-failure log
+
+!~~ Configure site-to-site IPsec VPNs ~~!
+!@ R1
+! Enable the Security Technology package license on R1.
+license boot module c1900 technology-package securityk9
+! Save the running configuration before reloading.
+end
+copy running-config startup-config
+reload
+! Create an access list to identify interesting traffic on R1.
+access-list 101 permit ip 172.20.1.0 0.0.0.255 172.30.3.0 0.0.0.255
+! Configure ACL 101 to allow traffic from the R1 Lo1 network to the R3 G0/1 LAN.
+
+! Configure the crypto isakmp policy 10 Phase 1 properties on R1 and the shared crypto key ciscovpnpa55. Use the following parameters:
+! Key distribution method: ISAKMP
+crypto isakmp policy 10
+! Encryption: aes 256
+encryption aes 256
+! Hash: sha
+hash sha
+! Authentication method: pre-shared
+authentication pre-share
+! Key exchange: DH Group 5
+group 5
+! IKE SA lifetime: 3600
+lifetime 3600
+! ISAKMP key: ciscovpnpa55
+crypto isakmp key ciscovpnpa55 address 10.20.20.1
+
+! Create the transform set VPN-SET to use esp-aes 256 and esp-sha-hmac. Then create the crypto map CMAP that binds all of the Phase 2 parameters together. Use sequence number 10 and identify it as an ipsec-isakmp map. Use the following parameters:
+! Transform set: VPN-SET
+crypto ipsec transform-set VPN-SET esp-aes 256 esp-sha-hmac
+! Transform encryption: esp-aes 256
+encryption aes 256
+! Transform authentication: esp-sha-hmac
+authentication sha-hmac
+! Perfect Forward Secrecy (PFS): group5
+set pfs group5
+! Crypto map name: CMAP
+crypto map CMAP
+! SA establishment: ipsec-isakmp
+set peer 10.20.20.1
+! Bind the crypto map (CMAP) to the outgoing interface.
+set transform-set VPN-SET
+
+! Verify that the Security Technology package license is enabled. Repeat the site-to-site VPN configurations on R3 so that they mirror all configurations from R1.
+! Ping the Lo1 interface (172.20.1.1) on R1 from PC-C. On R3, use the show crypto ipsec sa command to verify that the number of packets is more than 0, which indicates that the IPsec VPN tunnel is working.
+
+!~~ Configure firewall and IPS settings ~~!
+!@ R3
+enable
+!Firewall configuration
+configure terminal
+!Creates the security zones
+zone security IN-ZONE
+zone security OUT-ZONE
+!Creates the ACLs
+access-list 110 permit ip 172.30.3.0 0.0.0.255 any
+access-list 110 deny ip any any
+!Creates the class map
+class-map type inspect match-all INTERNAL-CLASS-MAP
+match access-group 110
+exit
+! Creates the policy map
+policy-map type inspect IN-TO-OUT-POLICY-PMAP
+class type inspect INTERNAL-CLASS-MAP
+inspect
+! Creates the zone pairs
+zone-pair  security IN-TO-OUT-ZPAIR source IN-ZONE destination OUT-ZONE
+service-policy type inspect IN-2-OUT-PMAP
+exit
+!Assing the interfaces to the zones
+interface g0/1
+zone-member security IN-ZONE
+exit
+interface s0/0/1
+zone-member security OUT-ZONE
+end
+
+!IPS configuration
+mkdir ipsdir
+configure terminal
+ip ips config location flash:ipsdir
+ip ips name IPS-RULE
+ip ips signature-category
+category all
+retired true
+exit
+category ios_ips basic
+retired false
+exit
+! Assing the interface to the IPS
+interface s0/0/1
+ip ips IPS-RULE in
+
+!~~ Configure ASA basic security and firewall settings ~~!
+!@ ASA
+! Configure VLAN interfaces with the following settings:
+! For the VLAN 1 interface, configure the addressing to use 192.168.10.1/24.
+enable
+configure terminal
+interface vlan 1
+ip address 192.168.10.1 255.255.255.0 
+! For the VLAN 2 interface, remove the default DHCP setting and configure the addressing to use 209.165.200.234/29.
+interface vlan 2
+ip address 209.165.200.234 255.255.255.248
+exit
+! Configure hostname, domain name, enable password, and console password using the following settings:
+! The ASA hostname is CCNAS-ASA.
+hostname CCNAS-ASA
+! The domain name is ccnasecurity.com.
+domain-name ccnasecurity.com
+! The enable mode password is ciscoenapa55.
+enable password ciscoenapa55
+! Create a user and configure AAA to use the local database for remote authentication.
+! Configure a local user account named admin with the password adminpa55. Do not use the encrypted attribute.
+user admin password adminpa55
+! Configure AAA to use the local ASA database for SSH user authentication.
+aaa authentication ssh console local
+! Allow SSH access from the outside host 172.30.3.3 with a timeout of 10 minutes.
+ssh 172.30.3.0 255.255.255.0 outside
+ssh timeout 10
+! Configure the ASA as a DHCP server using the following settings:
+! Assign IP addresses to inside DHCP clients from 192.168.10.5 to 192.168.10.30.
+dhcpd address 192.168.10.5-192.168.10.30 inside
+! Enable DHCP to listen for DHCP client requests.
+dhcpd enable inside
+! Configure static routing and NAT.
+! Create a static default route to the next hop router (R1) IP address.
+route outside 0.0.0.0 0.0.0.0 209.165.200.233
+! Create a network object named inside-net and assign attributes to it using the subnet and nat commands.
+! Create a dynamic NAT translation to the outside interface.
+object network inside-net
+subnet 192.168.10.0 255.255.255.0
+nat (inside,outside) dynamic interface
+exit
+! Modify the Cisco Modular Policy Framework (MPF) on the ASA using the following settings:
+! Configure class-map inspection_default to match default-inspection-traffic, and then exit to global configuration mode.
+class-map inspection_default
+match  default-inspection-traffic 
+exit
+! Configure the policy-map list global_policy. Enter the class inspection_default and enter the command to inspect icmp. Then exit to global config mode.
+policy-map global_policy 
+class inspection_default
+inspect icmp
+exit
+! Configure the MPF service-policy to make the global_policy apply globally.
+service-policy global_policy global
+
+
