@@ -61,12 +61,17 @@ tunnel destination 10.1.1.1
 show ip interface brief
 !@ WEST#
 ping 172.16.12.2
-![ ] ¿Cuál es la ruta al router EAST?
+![*] ¿Cuál es la ruta al router EAST?
 traceroute
-![ ] ¿Cuál es la ruta al router WEST desde el router EAST?
+!? Tracing the route to 10.2.2.1
+!?   1   10.1.1.2        10 msec   7 msec    17 msec
+!?   2   10.2.2.1        18 msec   19 msec   19 msec
+![*] ¿Cuál es la ruta al router WEST desde el router EAST?
+!? Tracing the route to 10.1.1.1
+!?   1   10.2.2.2        5 msec    0 msec    3 msec
+!?   2   10.1.1.1        34 msec   35 msec   19 msec
 ![ ] ¿A qué interfaces se asocian estas direcciones IP? ¿Por qué?
-ping 
-![ ] Los comandos ping y traceroute deberían realizarse correctamente. De lo contrario, lleve a cabo la resolución de problemas antes de continuar con la parte siguiente.
+ping
 
 !~~ Parte 3: Habilitar el routing por el túnel GRE ~~!
 !* Paso 1: Configurar el routing OSPF para el área 0 a través del túnel.

@@ -1,7 +1,7 @@
 {
     "workbench.colorTheme": "GitHub Dark Default",
     "editor.tabCompletion": "onlySnippets",
-    "editor.wordBasedSuggestions": false,
+    "editor.wordBasedSuggestions": "off",
     "cSpell.enabledLanguageIds": [
         "text",
         "cisco"

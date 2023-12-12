@@ -16,3 +16,5 @@ ip nat inside
 ! NAT for the outside interface
 interface <interface>
 ip nat outside
+
+show ip nat translations

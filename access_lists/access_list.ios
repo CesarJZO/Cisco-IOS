@@ -6,7 +6,7 @@ access-list <1-99> remark <text>
 
 ! Example
 access-list 10 remark Allow hosts from 192.168.10.0 LAN
-access-list 10 permit permit 192.168.10.0 0.0.0.255
+access-list 10 permit 192.168.10.0 0.0.0.255
 
 ! Show access-list
 show running-config | include access-list 100
